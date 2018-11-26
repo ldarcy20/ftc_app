@@ -4,12 +4,23 @@ public class HDriveFCCalcAuto {
         double leftMove;
         double rightMove;
         double middleMove;
-        public void calculateMovement (double theta, double angle) {
+
+        int side;
+        int middle;
+        public void calculateMovement (double moveAngle, double angle, double inches) {
+            double theta = moveAngle/360 * 2 * Math.PI;
+
             double robotAngle = -angle/360 * 2 * Math.PI;
             double tempVal = Math.sin(theta) * Math.cos(robotAngle) - Math.cos(theta) * Math.sin(robotAngle);
             double driveMiddle = Math.cos(theta) * Math.cos(-robotAngle) - Math.sin(theta) * Math.sin(-robotAngle);
             double driveLeft = tempVal;
             double driveRight = tempVal;
+
+            int encoderTicks = (int) ((1150 * inches)/ (2 * Math.PI * 2));
+            side = encoderTicks* (int) tempVal;
+            middle = encoderTicks* (int) driveMiddle;
+
+
             if (driveLeft > 1) {
                 driveRight = driveRight * (1 / driveLeft);
                 driveMiddle = driveMiddle * (1 / driveLeft);
@@ -50,4 +61,9 @@ public class HDriveFCCalcAuto {
         public double getMiddleDrive(){
             return middleMove;
         }
+
+        public int getRightTicks(){ return side; }
+        public int getLeftTicks() { return side; }
+        public int getMiddleTicks() {return middle; }
+
 }
