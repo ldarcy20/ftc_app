@@ -7,11 +7,9 @@ public class ArmCalculator {
     double shoulderMotorSpeed;
     double armOneLength;
     double armTwoLength;
-    double scale;
-    public ArmCalculator(double lengthOne, double lengthTwo, double scaleScale){
+    public ArmCalculator(double lengthOne, double lengthTwo){
         armOneLength = lengthOne;
         armTwoLength = lengthTwo;
-        scale = scaleScale;
     }
     public void calculateSpeed(double joystickX, double joystickY, DcMotor shoulderMotor, DcMotor elbowMotor){
         double verticalAngleVelocity = joystickY;
@@ -65,11 +63,11 @@ public class ArmCalculator {
     }
 
     public double getElbowMotorSpeed() {
-        return elbowMotorSpeed * scale;
+        return elbowMotorSpeed;
     }
 
     public double getShoulderMotorSpeed() {
-        return shoulderMotorSpeed * scale;
+        return shoulderMotorSpeed;
     }
 
 
