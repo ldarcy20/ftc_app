@@ -15,7 +15,7 @@ public class MineDiamonds extends OpMode{
     public void init(){
         verticalMotor = hardwareMap.get(DcMotor.class, "verticalMotor");
         horizontalMotor = hardwareMap.get(DcMotor.class, "horizontalMotor");
-        calculator = new ArmCalculator(5, 5, 1.0);
+        calculator = new ArmCalculator(5, 5);
         verticalMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         horizontalMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 

@@ -36,11 +36,9 @@ public class RoverTeleOp  extends OpMode {
     Servo leftIntake;
     Servo rightIntake;
     Servo bouncer;
-    double bouncerPos = 0;
-    double bicep = 8;
-    double forearm = 8;
-
-
+    double bouncerPos = 0.0;
+    double bicep = 8.0;
+    double forearm = 8.0;
 
     public void init(){
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
