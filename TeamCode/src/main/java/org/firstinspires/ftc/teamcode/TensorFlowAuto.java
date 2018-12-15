@@ -1,9 +1,4 @@
 package org.firstinspires.ftc.teamcode;
-
-
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,18 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.List;
-
-import java.util.Locale;
-
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
@@ -54,12 +39,8 @@ public class TensorFlowAuto extends LinearOpMode {
     DcMotorEx rightMotor;
     DcMotorEx middleMotor;
     DcMotorEx middleMotor2;
-
-    Orientation angles;
-    BNO055IMU imu;
-    String angleDouble = "hi";
-
     private ElapsedTime runtime = new ElapsedTime();// Use a Pushbot's hardware
+
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -89,18 +70,6 @@ public class TensorFlowAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
-        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
@@ -206,16 +175,6 @@ public class TensorFlowAuto extends LinearOpMode {
         }
     }
 
-
-    String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
-    }
-    String formatDegrees(double degrees) {
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
-
-
-    }
-
     /**
      * Initialize the Vuforia localization engine.
      */
@@ -312,96 +271,4 @@ public class TensorFlowAuto extends LinearOpMode {
             //  sleep(250);   // optional pause after each move
         }
     }
-
-
-    public void encoderDriveAngle(double speed,//int leftDistance, int rightDistance,
-                                  double inches, double timeoutS, double moveAngle) throws InterruptedException {
-
-        // add gyro crap
-        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
-        double robotAngle =  Double.parseDouble(angleDouble);
-
-
-
-        int newMiddleTarget = 0;
-        int newLeftTarget = 0;
-        int newRightTarget = 0;
-
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            double theta = moveAngle/360 * 2 * Math.PI;
-            double radianRobotAngle = -robotAngle/360 * 2 * Math.PI;
-            double tempSideVal = Math.sin(theta) * Math.cos(radianRobotAngle) - Math.cos(theta) * Math.sin(radianRobotAngle);
-            double tempMiddleVal = Math.cos(theta) * Math.cos(-radianRobotAngle) - Math.sin(theta) * Math.sin(-radianRobotAngle);
-            int sideInches = (int) (inches* tempSideVal);
-            int middleInches = (int) (inches* tempMiddleVal);
-            double scale =  middleInches/sideInches;
-            double speedMiddle = speed * scale;
-
-            if (speedMiddle > 1) {
-                speed = speed * (1 / speedMiddle);
-                speedMiddle = 1;
-            }
-
-            // Determine new target position, and pass to motor controller
-            newMiddleTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((middleInches) * COUNTS_PER_INCH);
-            newLeftTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((sideInches) * COUNTS_PER_INCH);
-            newRightTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((sideInches) * COUNTS_PER_INCH);
-            middleMotor.setTargetPosition(newMiddleTarget);
-            leftMotor.setTargetPosition(newLeftTarget);
-            rightMotor.setTargetPosition(newRightTarget);
-            middleMotor2.setTargetPosition(newMiddleTarget);
-            // Turn On RUN_TO_POSITION
-            middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            // reset the timeout time and start motion.
-            runtime.reset();
-            middleMotor.setPower(speedMiddle);
-            leftMotor.setPower(speed);
-            rightMotor.setPower(speed);
-            middleMotor2.setPower(speedMiddle);
-
-
-            // keep looping while we are still active, and there is time left, and both motors are running.
-            /*while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (middleMotor.isBusy() && leftMotor.isBusy() && rightMotor.isBusy()) && middleMotor2.isBusy()) {*/
-            while(leftMotor.getCurrentPosition() < newLeftTarget && middleMotor.getCurrentPosition() < newMiddleTarget) {
-
-                // Display it for the driver.
-                telemetry.addData("Path1" , leftMotor.getCurrentPosition());
-                telemetry.addData("Path2",
-                        middleMotor.getCurrentPosition());
-                telemetry.addData("Left Power",leftMotor.getPower());
-                telemetry.addData("Middle Power", middleMotor.getPower());
-                telemetry.update();
-
-                // Allow time for other processes to run.
-                idle();
-            }
-
-            // Stop all motion;
-            middleMotor.setPower(0);
-            leftMotor.setPower(0);
-            rightMotor.setPower(0);
-            middleMotor2.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-
-            //  sleep(250);   // optional pause after each move
-        }
-    }
-
-
 }
