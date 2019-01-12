@@ -19,8 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
-@TeleOp(name= "RoverTeleOp")
-public class RoverTeleOp  extends OpMode {
+@TeleOp(name= "RoverTeleOP")
+public class RoverTeleOP  extends OpMode {
     Orientation angles;
     BNO055IMU imu;
     String angleDouble = "hi";
