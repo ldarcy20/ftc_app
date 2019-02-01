@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 public class ArmCalculator {
     double elbowMotorSpeed;
     double shoulderMotorSpeed;
@@ -11,11 +13,12 @@ public class ArmCalculator {
         armOneLength = lengthOne;
         armTwoLength = lengthTwo;
     }
-    public void calculateSpeed(double joystickX, double joystickY, DcMotor shoulderMotor, DcMotor elbowMotor){
-        double verticalAngleVelocity = joystickY;
-        double scale = (-1*(armOneLength*Math.cos(shoulderMotor.getCurrentPosition()) + armTwoLength*Math.sin(elbowMotor.getCurrentPosition() + shoulderMotor.getCurrentPosition() - 90))/(armTwoLength*Math.sin( elbowMotor.getCurrentPosition() + shoulderMotor.getCurrentPosition() - 90)));
+    public void calculateSpeed(double joystickX, double joystickY, DcMotor shoulderMotor, DcMotor elbowMotor, double shoulderAngle, double elbowAngle, Telemetry telemetry){
+        double verticalAngleVelocity = .4*joystickY;
+        //double scale = (-1*(armOneLength*Math.cos(Math.toRadians(shoulderAngle)) + armTwoLength*Math.sin(Math.toRadians(elbowAngle) + Math.toRadians(shoulderAngle) - 90))/(armTwoLength*Math.sin( Math.toRadians(elbowAngle) + Math.toRadians(shoulderAngle) - 90)));
+        double scale = -(double)armOneLength*Math.cos(Math.toRadians((double)shoulderAngle))/((double)armTwoLength*(double)Math.sin(Math.toRadians((double)elbowAngle-(90.0-(double)shoulderAngle))));
         double moveAcross = joystickX;
-        double moveUp = moveAcross * (1/scale) + verticalAngleVelocity;
+        double moveUp = moveAcross *((double)5.2/7.0) * (scale) + verticalAngleVelocity;
         //double ratio = moveUp/moveAcross;
         if(Math.abs(moveUp) > Math.abs(moveAcross)){
             moveAcross = moveAcross*(1/Math.abs(moveUp));
@@ -26,44 +29,13 @@ public class ArmCalculator {
             moveAcross = moveAcross*(1/Math.abs(moveAcross));
         }
 
-      /*  if(ratio > 1 && moveup > 0){
-            shoulderMotorPower = 1;
-            elbowMotorPower = 1/ ratio;
-        }
-        else if (ratio < -1 && moveup < 0){
-            shoulderMotorPower = -1;
-            elbowMotorPower = -1/ ratio;
-        }
-        else if (ratio > 1 && moveup < 0){
-            shoulderMotorPower = -1;
-            elbowMotorPower = -1/ ratio;
-        }
-        else if (ratio < -1 && moveup > 0){
-            shoulderMotorPower = 1;
-            elbowMotorPower = 1/ ratio;
-        }
-        else if (ratio > 0 && moveup > 0){
-            shoulderMotorPower = ratio;
-            elbowMotorPower = 1;
-        }
-        else if (ratio > 0 && moveup < 0){
-            shoulderMotorPower = -ratio;
-            elbowMotorPower = -1;
-        }
-        else if (ratio < 0 && moveup > 0){
-            shoulderMotorPower = - ratio;
-            elbowMotorPower = -1;
-        }
-        else {
-            shoulderMotorPower = ratio;
-            elbowMotorPower = 1;
-        }*/
-        shoulderMotorSpeed = moveUp;
-        elbowMotorSpeed = moveAcross;
+
+        elbowMotorSpeed = moveUp;
+        shoulderMotorSpeed = moveAcross;
     }
 
     public double getElbowMotorSpeed() {
-        return elbowMotorSpeed;
+        return -elbowMotorSpeed;
     }
 
     public double getShoulderMotorSpeed() {
@@ -71,5 +43,5 @@ public class ArmCalculator {
     }
 
 
-    
+
 }

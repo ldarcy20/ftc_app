@@ -159,19 +159,6 @@ public class HDriveTeleop2 extends OpMode {
         if(gamepad1.a != true && yPressed == false) {
             rightX = gamepad1.right_stick_x;
         }
-        float rightY = gamepad1.right_stick_y;
-        float left = gamepad1.left_trigger;
-        float right = gamepad1.right_trigger;
-        float leftTrigger = gamepad2.left_trigger;
-        float rightTrigger = gamepad2.right_trigger;
-        boolean buttonAPressed = gamepad1.a;
-        boolean buttonXPressed = gamepad1.x;
-        boolean buttonAPressed2 = gamepad2.a;
-        boolean buttonXPressed2 = gamepad2.x;
-        boolean dPadUp    = gamepad1.dpad_up;
-        boolean dPadDown  = gamepad1.dpad_down;
-        boolean dPadLeft  = gamepad1.dpad_left;
-        boolean dPadRight = gamepad1.dpad_right;
         if(gamepad1.left_stick_x > 0 || gamepad1.left_stick_x < 0 || gamepad1.left_stick_y > 0 || gamepad1.left_stick_y < 0 || gamepad1.right_stick_x > 0 || gamepad1.right_stick_x < 0 && timeState == true) {
             timeState = false;
         }
@@ -385,6 +372,7 @@ public class HDriveTeleop2 extends OpMode {
             relicArm.setPower(0);
         }
     }
+
     String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }

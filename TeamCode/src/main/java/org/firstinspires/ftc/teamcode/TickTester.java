@@ -25,24 +25,35 @@ public class TickTester extends OpMode {
     static final double     COUNTS_PER_MOTOR_REV    = 1150 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4; ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double COUNTS_PER_INCH_SIDE = 176;
+    static final double     COUNTS_PER_INCH         = /*(COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415)*/91.125;
+    static final double COUNTS_PER_INCH_SIDE = 125;
     DcMotorEx leftMotor;
     DcMotorEx rightMotor;
     DcMotorEx middleMotor;
     DcMotorEx middleMotor2;
     DcMotorEx hangArm;
+    DcMotorEx shoulderMotor;
+    DcMotorEx elbowMotor;
+    DcMotorEx rotationMotor;
     Servo hangArmLock;
+    Servo leftIntake;
+    Servo rightIntake;
+    Servo bouncer;
     String angleDouble = "hi";
     Orientation angles;
     BNO055IMU imu;
     PIDFCoefficients pidStuff;
     boolean state = false;
+    boolean isPressedX = false;
+    boolean isPressedTrigger = false;
+    boolean isPressedBumper = false;
+    boolean runMotors = false;
     int counter = 150;
     int leftEncoders = 0;
     int rightEncoders = 0;
     int middleEncoders = 0;
+    int changed = 0;
 
     int leftEncodersFinal = 0;
     int rightEncodersFinal = 0;
@@ -55,6 +66,7 @@ public class TickTester extends OpMode {
     double leftChangeInches = 0;
     double rightChangeInches = 0;
     double middleChangeInches = 0;
+    double bouncerPos = 0;
 
     @Override
     public void init() {
@@ -74,7 +86,13 @@ public class TickTester extends OpMode {
         middleMotor = (DcMotorEx)hardwareMap.get(DcMotor.class, "middleMotor");
         middleMotor2 = (DcMotorEx)hardwareMap.get(DcMotor.class,"middleMotor2");
         hangArm = (DcMotorEx)hardwareMap.get(DcMotor.class, "Hang Arm");
+        shoulderMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "Shoulder Motor");
+        elbowMotor = (DcMotorEx) hardwareMap.get(DcMotor.class,"Elbow Motor");
+        rotationMotor = (DcMotorEx)hardwareMap.get(DcMotor.class, "Rotation Motor");
         hangArmLock = hardwareMap.servo.get("Hang Arm Lock");
+        leftIntake = hardwareMap.get(Servo.class, "Left Intake");
+        rightIntake = hardwareMap.get(Servo.class, "Right Intake");
+        bouncer = hardwareMap.get(Servo.class, "Bouncer");
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -83,31 +101,39 @@ public class TickTester extends OpMode {
 
         rightMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         leftMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
-        middleMotor.setDirection(DcMotor.Direction.FORWARD);
-        middleMotor2.setDirection(DcMotor.Direction.FORWARD);
+        middleMotor.setDirection(DcMotor.Direction.REVERSE);
+        middleMotor2.setDirection(DcMotor.Direction.REVERSE);
         pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
-        pidStuff.p = 0;
-        pidStuff.i = 0;
+        pidStuff.p = 5;
+        pidStuff.i = 1;
         pidStuff.d = 0;
-        pidStuff.f = 13;
+        pidStuff.f = 10.2;
         pidStuff.algorithm = MotorControlAlgorithm.PIDF;
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shoulderMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         hangArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shoulderMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         leftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
         rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
         middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
         middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
         hangArm.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
+
+        elbowMotor.setDirection(DcMotor.Direction.REVERSE);
 
     }
 
@@ -119,6 +145,56 @@ public class TickTester extends OpMode {
         rightMotor.setPower(gamepad1.left_stick_y);
         middleMotor.setPower(gamepad1.left_stick_x);
         middleMotor2.setPower(gamepad1.left_stick_x);
+        if(gamepad2.x && isPressedX) {
+            isPressedX = false;
+            resetEncoders();
+        }
+        else if (!gamepad2.x){
+            isPressedX = true;
+        }
+        if(gamepad2.y) {
+            shoulderMotor.setTargetPosition(shoulderMotor.getCurrentPosition());
+            elbowMotor.setTargetPosition(elbowMotor.getCurrentPosition());
+            runMotors = false;
+        }
+        else {
+            runMotors = true;
+        }
+
+        if(gamepad2.left_bumper && isPressedBumper) {
+            isPressedBumper = false;
+            shoulderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            elbowMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+        else if (!gamepad2.left_bumper){
+            isPressedBumper = true;
+        }
+
+        if(gamepad2.left_trigger == 1 && isPressedTrigger) {
+            isPressedTrigger = false;
+            shoulderMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        else if (gamepad2.left_trigger != 1){
+            isPressedTrigger = true;
+        }
+        if (gamepad2.left_bumper) {
+            leftIntake.setPosition(.05);
+        } else {
+            leftIntake.setPosition(0.5 + (gamepad2.left_trigger / 2.3));
+        }
+        if (gamepad2.right_bumper) {
+            rightIntake.setPosition(.05);
+        } else {
+            rightIntake.setPosition(0.5 + (gamepad2.right_trigger / 2.3));
+
+        }
+        if (gamepad2.dpad_up) {
+            bouncerPos = bouncerPos + .03; //.58
+        } else if (gamepad2.dpad_down) {
+            bouncerPos = bouncerPos - .03;//.73fr
+        }
+        bouncer.setPosition(bouncerPos);
 
 
         /*if(gamepad1.a) {
@@ -137,6 +213,20 @@ public class TickTester extends OpMode {
         double realAngle = convertAngle(angleDouble);
         telemetry.addData("Real Angle", realAngle);
         telemetry.update();*/
+        if(runMotors) {
+            rotationMotor.setPower(.5 * gamepad2.right_stick_x);
+            elbowMotor.setPower(.5 * gamepad2.left_stick_y);
+            shoulderMotor.setPower(.5 * gamepad2.left_stick_x);
+        }
+        if(hangArmLock.getPosition() != .62 && hangArmLock.getPosition() != .35) {
+            changed++;
+        }
+        if(gamepad1.left_bumper) {
+            hangArmLock.setPosition(.35);
+        }
+        else if(gamepad1.right_bumper) {
+            hangArmLock.setPosition(.62);
+        }
         if(gamepad1.a && state == false && counter > 150) {
             state = true;
             counter = 0;
@@ -166,10 +256,21 @@ public class TickTester extends OpMode {
             telemetry.addData("Middle Inches", middleChangeInches);
             telemetry.update();
         }
-        telemetry.addData("Middle", middleMotor.getCurrentPosition());
-        telemetry.addData("Angle", angleDouble);
-        telemetry.addData("Hang Arm", hangArm.getCurrentPosition());
+        telemetry.addData("Left Ticks: ", leftMotor.getCurrentPosition());
+        telemetry.addData("Right Ticks: ", rightMotor.getCurrentPosition());
         telemetry.addData("Hang Arm Lock", hangArmLock.getPosition());
+        telemetry.addData("Changed", changed);
+        telemetry.addData("Hang Arm", hangArm.getCurrentPosition());
+        telemetry.addData("Middle", middleMotor.getCurrentPosition());
+        telemetry.addData("Shoulder Pos", shoulderMotor.getCurrentPosition());
+        telemetry.addData("Elbow Pos", elbowMotor.getCurrentPosition());
+        telemetry.addData("Rotation Pos", rotationMotor.getCurrentPosition());
+        telemetry.addData("Elbow Angle", elbowAngle(elbowMotor.getCurrentPosition()));
+        telemetry.addData("Shoulder Angle", shoulderAngle(shoulderMotor.getCurrentPosition()));
+        telemetry.addData("Side Inches", leftMotor.getCurrentPosition()/COUNTS_PER_INCH);
+        telemetry.addData("Mid Inches", middleMotor.getCurrentPosition()/COUNTS_PER_INCH_SIDE);
+        telemetry.addData("Angle", angleDouble);
+        telemetry.addData("Bouncer", bouncer.getPosition());
 
         //telemetry.addData("Counts", leftMotor.get);
         telemetry.update();
@@ -177,11 +278,41 @@ public class TickTester extends OpMode {
         //telemetry.update();
         counter++;
     }
+    public double elbowAngle(double currentPos) {
+        double finalPos = 90-shoulderAngle((double)shoulderMotor.getCurrentPosition()) +80+ ((currentPos + (2300-1576))/(2300*4)) * 360;
+        return finalPos;
+    }
+    public double shoulderAngle(double currentPos) {
+        double finalPos = ((-currentPos+4330)/(2350*4)) * 360;
+        return finalPos;
+    }
     String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }
     String formatDegrees(double degrees) {
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+    public void resetEncoders() {
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shoulderMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shoulderMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        hangArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+
     }
     public double convertAngle(String angle) {
         double angleUsed = Double.parseDouble(angle);

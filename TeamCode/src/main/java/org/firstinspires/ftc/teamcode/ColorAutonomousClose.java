@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -47,14 +48,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Locale;
+
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 
 /**
  * Created by Luke on 9/25/2016.
  */
-@Autonomous(name= "Simplified Autonomous ", group = "HDrive")
-public class AutonomousSimple extends LinearOpMode {
+@Autonomous(name= "Color Close Auto ", group = "HDrive")
+public class ColorAutonomousClose extends LinearOpMode {
     VuforiaLocalizer vuforia;
     BNO055IMU imu;
     private ElapsedTime runtime = new ElapsedTime();// Use a Pushbot's hardware
@@ -63,16 +68,16 @@ public class AutonomousSimple extends LinearOpMode {
     static final double     WHEEL_DIAMETER_INCHES   = 4; ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = /*(COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415)*/ 91.125;
+    static final double COUNTS_PER_INCH_SIDE = 125;
+    double initialAngle;
     DcMotorEx leftMotor;
     DcMotorEx rightMotor;
     DcMotorEx middleMotor;
+    DcMotorEx hangArm;
     DcMotorEx glyphMotor;
     DcMotor RelicArm;
     DcMotorEx middleMotor2;
-    Servo claw1;
-    Servo claw2;
-    Servo RelicClaw;
-    Servo RelicClaw2;
+    Servo hangArmLock;
     AutoCalculator calculator;
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -126,12 +131,15 @@ public class AutonomousSimple extends LinearOpMode {
         rightMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "rightMotor");
         middleMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "middleMotor");
         middleMotor2 = (DcMotorEx) hardwareMap.get(DcMotor.class, "middleMotor2");
-        glyphMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "Hirsh is very dumb");
-        claw1 = hardwareMap.servo.get("claw1");
+        hangArm = (DcMotorEx) hardwareMap.get(DcMotor.class, "Hang Arm");
+
+        hangArmLock = hardwareMap.servo.get("Hang Arm Lock");
+        //glyphMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "Hirsh is very dumb");
+        /*claw1 = hardwareMap.servo.get("claw1");
         claw2 = hardwareMap.servo.get("claw2");
         RelicClaw = hardwareMap.get(Servo.class, "Relic Claw");
         RelicClaw2 = hardwareMap.get(Servo.class, "Relic Claw 2");
-        RelicArm = hardwareMap.get(DcMotor.class, "Relic Arm");
+        RelicArm = hardwareMap.get(DcMotor.class, "Relic Arm");*/
 
         /*
          * Initialize the drive system variables.
@@ -146,14 +154,14 @@ public class AutonomousSimple extends LinearOpMode {
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        glyphMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         idle();
 
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        glyphMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        hangArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.addData("Path0", "Starting at %7d :%7d",
                 leftMotor.getCurrentPosition(),
@@ -162,8 +170,8 @@ public class AutonomousSimple extends LinearOpMode {
         telemetry.update();
         rightMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         leftMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
-        middleMotor.setDirection(DcMotor.Direction.FORWARD);
-        middleMotor2.setDirection(DcMotor.Direction.FORWARD);
+        middleMotor.setDirection(DcMotor.Direction.REVERSE);
+        middleMotor2.setDirection(DcMotor.Direction.REVERSE);
         calculator = new AutoCalculator();
         pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff.p = 5;
@@ -173,44 +181,28 @@ public class AutonomousSimple extends LinearOpMode {
         pidStuff.algorithm = MotorControlAlgorithm.PIDF;
         leftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
         rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
+        pidStuff.f = 23;
         middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
         middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
-        telemetry.addData("pid", leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+        hangArm.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidStuff);
+        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+        initialAngle = Double.parseDouble(angleDouble);
+        telemetry.addLine("Ready to Begin");
+        telemetry.addData("Starting Angle", initialAngle);
         telemetry.update();
 
         waitForStart();
-
-        telemetry.addLine("Should be Left");
-        //encoderDriveBoth(.5, .5, 27, 27, 27, 60);
-        /*encoderDriveProfiledBoth(.1,.1,.8,.8,24,28,15,15,5,5,false);
-        telemetry.addLine("Completed");
+       /* releaseArm();
+        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+        telemetry.addData("Current Angle", angleDouble);
         telemetry.update();
-        Thread.sleep(100);
+        realignRobot();*/
 
-        encoderDriveProfiledBoth(.1,-.1,.5,-.6,24,-28,15,-15,5,-5,true);
-        //encoderDriveBoth(.5,.5,-27,27,27,60);
-        Thread.sleep(100);
-        //Thread.sleep(100);
 
-        encoderDriveProfiledBoth(-.1,.1,-.5,.5,-24,28,15,15,5,5,true);
-        //encoderDriveBoth(.5,.5,27,-27,-27,60);
-        Thread.sleep(100);
 
-        encoderDriveProfiledBoth(-.1,-.1,-.3,-.5,-8,-8,-6,-6,-2,-2,true);
-        //encoderDriveBoth(.5,.5,-12,-12,-12,60);
-        Thread.sleep(100);
 
-        encoderDriveMiddle(.5,-60,60);
-        //Thread.sleep(100);
-
-        turn();
-        //Thread.sleep(100);
-        //Thread.sleep(100);
-
-        encoderDriveBoth(.5, .5,5.3, -8.5,-8.5,60);
-        Thread.sleep(100);
-        //Thread.sleep(100);
-        //encoderDriveBoth(.8, .5,0,10,10,60);*/
         tfod.activate();
         int objectsFound = 0;
         int position = 0;
@@ -256,84 +248,67 @@ public class AutonomousSimple extends LinearOpMode {
                 }
             }
         }
-       /* if(position == 1) {
+        if(position == 1) {
             telemetry.addLine("Should be Left");
             //encoderDriveBoth(.5, .5, 27, 27, 27, 60);
-            encoderDriveProfiledBoth(.1,.1,.8,.8,27,27,10,10,false);
+            encoderDriveProfiledBoth(.1,.1,.5,.7,27,24,7,7,5,7,true);
             telemetry.addLine("Completed");
             telemetry.update();
-            Thread.sleep(1000);
 
-            encoderDriveProfiledBoth(.1,-.1,.5,-.5,27,-27,7,-7,true);
+            //encoderDriveProfiledBoth(.1,-.1,.5,-.5,24,-27,7,-7,5,-5,true);
             //encoderDriveBoth(.5,.5,-27,27,27,60);
-            Thread.sleep(1000);
+            //Thread.sleep(100);
             //Thread.sleep(100);
 
-            encoderDriveProfiledBoth(-.1,.1,-.5,.5,-27,27,7,7,true);
+            //encoderDriveProfiledBoth(-.1,.1,-.5,.5,-27,27,-7,7,5,5,true);
             //encoderDriveBoth(.5,.5,27,-27,-27,60);
-            Thread.sleep(1000);
+            //Thread.sleep(100);
 
-            encoderDriveProfiledBoth(-.1,-.1,-.5,-.5,-12,-12,-4,-4,true);
+            encoderDriveProfiledBoth(-.1,-.1,-.5,-.7,-10,-27,-4,-7,-4,-7,true);
             //encoderDriveBoth(.5,.5,-12,-12,-12,60);
-            Thread.sleep(1000);
-
-            encoderDriveMiddle(.5,-60,60);
+            //Thread.sleep(100);
+            encoderDriveProfiledMiddle(-.1,-.8,-44,-7,true);
+            //encoderDriveMiddle(.5,-60,60);
             //Thread.sleep(100);
 
-            turn();
+            //turn2();
             //Thread.sleep(100);
             //Thread.sleep(100);
-
-            encoderDriveBoth(.5, .5,5.3, -8.5,-8.5,60);
-            Thread.sleep(100);
+            //encoderDriveProfiledMiddle(.1,.4,8,2,true);
+            //encoderDrive(.4,8,8,60);
+            //encoderDriveBoth(.5, .5,5.3, -8.5,-8.5,60);
             //Thread.sleep(100);
             //encoderDriveBoth(.8, .5,0,10,10,60);
         }
         else if(position == 2) {
-            telemetry.addLine("Should Be Middle");
+            telemetry.addLine("Should be middle");
             telemetry.update();
-            //encoderDrive(.5,45,45,60);
-            encoderDriveProfiled(.1,.8,45,16,5,true);
+            encoderDriveProfiled(.2,.5,23,7,5,true);
 
+            encoderDrive(-.4,-7,-7,60);
 
-            encoderDriveProfiled(-.1,-.8,-27,-16,5,true);
+            encoderDriveProfiledMiddle(.1,.4,43,7,true);
 
-
-            //encoderDriveMiddle(.5,-46,60);
-            encoderDriveProfiledMiddle(-.1,-.8,-46,-14,true);
-
-
-            turn2();
-            Thread.sleep(100);
-            //Thread.sleep(100);
-
-                encoderDriveBoth(.4, .6,18,11,11,60);
-
+            encoderDriveAngle(.5,15,133);
+            encoderDriveAngle(-.6,-40,133);
         }
         else if(position == 3) {
             telemetry.addLine("Should be Right");
-            encoderDriveProfiledBoth(.1,-.1,.8,-.8,29,-29,14,-14,true);
+            encoderDriveProfiledBoth(.1,-.1,.6,-.6,33,-30,10,-10,7,-5,true);
             //encoderDriveBoth(.5, .5, -29, 29, 29, 60);
-            telemetry.addLine("Completed");
-            telemetry.update();
-            Thread.sleep(100);
-            encoderDriveProfiledBoth(.1,.1,.8,.8,29,29,14,14,true);
             //encoderDriveBoth(.5,.5,29,29,29,60);
             //Thread.sleep(100);
             //Thread.sleep(100);
 
-            turn2();
-            //Thread.sleep(100);
-            encoderDriveProfiledMiddle(.2,.7,10,4,true);
-            //encoderDriveMiddle(.5,10,60);
-            //Thread.sleep(100);
-            encoderDriveProfiled(.2,1,65,12,10,true);
-            //encoderDrive(.5,58,58,60);
+            //turn2();
+            encoderDriveBoth(-.41,-.43,-25.9,-27.7,-27.7,60);
+            //encoderDriveProfiled(.1,.7,35,7,6,true);
+
         }
         else {
             telemetry.addLine("Yea you broke something lmao");
             telemetry.update();
-        }*/
+        }
 
         //140
 
@@ -399,7 +374,7 @@ public class AutonomousSimple extends LinearOpMode {
         double finalAngle = 0;
         while(Double.parseDouble(angleDouble) > -133 && Double.parseDouble(angleDouble) < 10) {
             double maxPower = .6;
-            double minPower = .05;
+            double minPower = .1;
             double power = minPower + (maxPower * ((133-Math.abs(Double.parseDouble(angleDouble)))/133));
             leftMotor.setPower(power);
             rightMotor.setPower(-power);
@@ -420,17 +395,8 @@ public class AutonomousSimple extends LinearOpMode {
         rightMotor.setPower(0);
         telemetry.addLine("Done");
         telemetry.update();
-        try{
-            Thread.sleep(1000);
-        }
-        catch(InterruptedException e){
-
-        }
         angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
-        telemetry.addData("Last Angle Seen", finalAngle);
-        telemetry.addData("Angle Final", angleDouble);
-        telemetry.update();
     }
     public void encoderDriveProfiled(double minSpeed, double maxSpeed, double inches, double slowDownAt, double speedUpAt, boolean end) {
         int newSideTargets = 0;
@@ -469,8 +435,8 @@ public class AutonomousSimple extends LinearOpMode {
                         currentPowerRight = minSpeed + ((maxSpeed) * ((Math.abs(newSideTargets) - Math.abs(rightMotor.getCurrentPosition())) / (Math.abs(slowDownAt) * COUNTS_PER_INCH)));
                     }
                     else {
-                        currentPowerLeft = -.08 + ((maxSpeed + minSpeed) * ((Math.abs(newSideTargets) - Math.abs(leftMotor.getCurrentPosition())) / (Math.abs(slowDownAt) * COUNTS_PER_INCH)));
-                        currentPowerRight = -.08 + ((maxSpeed + minSpeed) * ((Math.abs(newSideTargets) - Math.abs(rightMotor.getCurrentPosition())) / (Math.abs(slowDownAt) * COUNTS_PER_INCH)));
+                        currentPowerLeft = -.05 + ((maxSpeed + minSpeed) * ((Math.abs(newSideTargets) - Math.abs(leftMotor.getCurrentPosition())) / (Math.abs(slowDownAt) * COUNTS_PER_INCH)));
+                        currentPowerRight = -.05 + ((maxSpeed + minSpeed) * ((Math.abs(newSideTargets) - Math.abs(rightMotor.getCurrentPosition())) / (Math.abs(slowDownAt) * COUNTS_PER_INCH)));
                     }
                     stateAt = 2;
                 }
@@ -488,21 +454,22 @@ public class AutonomousSimple extends LinearOpMode {
             leftMotor.setPower(0);
             rightMotor.setPower(0);
         }
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
     public void encoderDriveProfiledMiddle(double minSpeed, double maxSpeed, double inches, double slowDownAt, boolean end) {
-        int newSideTargets = 0;
+        int newMiddleTargets = 0;
+        double startingAngle = 0;
+        double endingAngle = 0;
+        double angleError = 0;
         if(opModeIsActive()) {
+            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+            startingAngle = Double.parseDouble(angleDouble);
             middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-            newSideTargets = /*robot.leftMotor.getCurrentPosition() + */(int) ((Math.abs(inches)) * COUNTS_PER_INCH);
-            middleMotor.setTargetPosition(newSideTargets);
-            middleMotor2.setTargetPosition(newSideTargets);
+            newMiddleTargets = /*robot.leftMotor.getCurrentPosition() + */(int) ((Math.abs(inches)) * COUNTS_PER_INCH_SIDE);
+            middleMotor.setTargetPosition(newMiddleTargets);
+            middleMotor2.setTargetPosition(newMiddleTargets);
 
             middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -512,24 +479,40 @@ public class AutonomousSimple extends LinearOpMode {
             middleMotor2.setPower(minSpeed);
 
             double currentPower = 0;
-            while(Math.abs(middleMotor.getCurrentPosition()) < newSideTargets && Math.abs(middleMotor2.getCurrentPosition()) < newSideTargets) {
+            int runThroughs = 0;
+            double sidePower = 0;
+            boolean atHere = false;
+            while(Math.abs(middleMotor.getCurrentPosition()) < newMiddleTargets && Math.abs(middleMotor2.getCurrentPosition()) < newMiddleTargets) {
                 int stateAt = 0;
-                if((newSideTargets - Math.abs(middleMotor.getCurrentPosition())) > (Math.abs(slowDownAt) * COUNTS_PER_INCH)) {
+                if((newMiddleTargets - Math.abs(middleMotor.getCurrentPosition())) > (Math.abs(slowDownAt) * COUNTS_PER_INCH_SIDE)) {
                     currentPower = maxSpeed + minSpeed;
                     stateAt = 1;
                 }
                 else {
-                    currentPower = minSpeed + (maxSpeed * ((Math.abs(newSideTargets) - Math.abs(middleMotor.getCurrentPosition()))/(Math.abs(slowDownAt) * COUNTS_PER_INCH)));
+                    currentPower = minSpeed + (maxSpeed * ((Math.abs(newMiddleTargets) - Math.abs(middleMotor.getCurrentPosition()))/(Math.abs(slowDownAt) * COUNTS_PER_INCH_SIDE)));
                     stateAt = 2;
                 }
+                if(runThroughs > 8) {
+                    atHere = true;
+                    angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                    angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+                    endingAngle = Double.parseDouble(angleDouble);
+                    angleError = endingAngle - startingAngle;
+                    sidePower = (angleError * 4)/100;
+                }
+                leftMotor.setPower(sidePower);
+                rightMotor.setPower(-sidePower);
                 middleMotor.setPower(currentPower);
                 middleMotor2.setPower(currentPower);
                 telemetry.addData("Power", currentPower);
                 telemetry.addData("At", stateAt);
-                telemetry.addData("Target", newSideTargets);
+                telemetry.addData("Target", newMiddleTargets);
                 telemetry.addData("Current Pos" , middleMotor.getCurrentPosition());
                 telemetry.addData("Current Right", middleMotor2.getCurrentPosition());
+                telemetry.addData("Adjusting", atHere);
+                telemetry.addData("Angle Error", angleError);
                 telemetry.update();
+                runThroughs++;
             }
         }
         if(end == true) {
@@ -540,6 +523,9 @@ public class AutonomousSimple extends LinearOpMode {
     public void encoderDriveProfiledBoth(double minSpeedSide, double minSpeedMiddle, double maxSpeedSide, double maxSpeedMiddle, double inchesSide, double inchesMiddle, double slowDownAtSide, double slowDownAtMiddle, double speedUpAtSide, double speedUpAtMiddle, boolean end) {
         int newSideTargets = 0;
         int newMiddleTargets = 0;
+        double startingAngle = 0;
+        double endingAngle = 0;
+        double angleError = 0;
         if(opModeIsActive()) {
             leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -547,7 +533,7 @@ public class AutonomousSimple extends LinearOpMode {
             middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
             newSideTargets = /*robot.leftMotor.getCurrentPosition() + */(int) ((Math.abs(inchesSide)) * COUNTS_PER_INCH);
-            newMiddleTargets = (int) ((Math.abs(inchesMiddle)) * COUNTS_PER_INCH);
+            newMiddleTargets = (int) ((Math.abs(inchesMiddle)) * COUNTS_PER_INCH_SIDE);
 
             leftMotor.setTargetPosition(newSideTargets);
             rightMotor.setTargetPosition(newSideTargets);
@@ -567,11 +553,13 @@ public class AutonomousSimple extends LinearOpMode {
 
             double currentPowerSide = 0;
             double currentPowerMiddle = 0;
-            while(Math.abs(leftMotor.getCurrentPosition()) < newSideTargets && Math.abs(rightMotor.getCurrentPosition()) < newSideTargets && Math.abs(middleMotor.getCurrentPosition()) < newMiddleTargets && Math.abs(middleMotor2.getCurrentPosition()) < newMiddleTargets) {
+            int runThroughs = 0;
+            double sideChangePower = 0;
+            while(Math.abs(leftMotor.getCurrentPosition()) < newSideTargets || Math.abs(rightMotor.getCurrentPosition()) < newSideTargets || Math.abs(middleMotor.getCurrentPosition()) < newMiddleTargets || Math.abs(middleMotor2.getCurrentPosition()) < newMiddleTargets) {
+                boolean atHere = false;
                 int stateAt = 0;
                 int stateAtMid = 0;
-
-                if((newSideTargets - Math.abs(leftMotor.getCurrentPosition())) > (Math.abs(slowDownAtSide) * COUNTS_PER_INCH) && ((Math.abs(leftMotor.getCurrentPosition())) > (Math.abs(speedUpAtSide * COUNTS_PER_INCH)))) {
+                if((newSideTargets - Math.abs(leftMotor.getCurrentPosition())) > (Math.abs(slowDownAtSide) * COUNTS_PER_INCH)&& (Math.abs(leftMotor.getCurrentPosition())) > (Math.abs(speedUpAtSide) * COUNTS_PER_INCH)) {
                     currentPowerSide = maxSpeedSide+minSpeedMiddle;
                     stateAt = 1;
                 }
@@ -579,28 +567,45 @@ public class AutonomousSimple extends LinearOpMode {
                     stateAt = 3;
                     currentPowerSide = minSpeedSide + (maxSpeedSide * (Math.abs(leftMotor.getCurrentPosition())/(Math.abs(speedUpAtSide) * COUNTS_PER_INCH)));
                 }
+                else if((Math.abs(leftMotor.getCurrentPosition())) > (Math.abs(newSideTargets))) {
+                    currentPowerSide = 0;
+                    stateAt = 4;
+                }
                 else {
-                    currentPowerSide = minSpeedSide + ((maxSpeedSide) * ((Math.abs(newSideTargets) - Math.abs(leftMotor.getCurrentPosition())) / (Math.abs(slowDownAtSide) * COUNTS_PER_INCH)));
+                    currentPowerSide = minSpeedSide + (maxSpeedSide * ((Math.abs(newSideTargets) - Math.abs(leftMotor.getCurrentPosition()))/(Math.abs(slowDownAtSide) * COUNTS_PER_INCH)));
                     stateAt = 2;
                 }
 
-                if(newMiddleTargets - Math.abs(middleMotor.getCurrentPosition()) > (Math.abs(slowDownAtMiddle) * COUNTS_PER_INCH) && (Math.abs(middleMotor.getCurrentPosition())) > (Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH)) {
+                if(newMiddleTargets - Math.abs(middleMotor.getCurrentPosition()) > (Math.abs(slowDownAtMiddle) * COUNTS_PER_INCH_SIDE) && (Math.abs(middleMotor.getCurrentPosition())) > (Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH_SIDE)) {
                     currentPowerMiddle = maxSpeedMiddle+minSpeedMiddle;
                     stateAtMid = 1;
                 }
-                else if((Math.abs(middleMotor.getCurrentPosition())) < (Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH)) {
+                else if((Math.abs(middleMotor.getCurrentPosition())) < (Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH_SIDE)) {
                     stateAtMid = 3;
-                    currentPowerMiddle = minSpeedMiddle + (maxSpeedMiddle * (Math.abs(middleMotor.getCurrentPosition())/(Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH)));
+                    currentPowerMiddle = minSpeedMiddle + (maxSpeedMiddle * (Math.abs(middleMotor.getCurrentPosition())/(Math.abs(speedUpAtMiddle) * COUNTS_PER_INCH_SIDE)));
+                }
+                else if((Math.abs(middleMotor.getCurrentPosition()) > Math.abs(newMiddleTargets))) {
+                    currentPowerMiddle = 0;
+                    stateAtMid = 4;
                 }
                 else {
-                    currentPowerMiddle = minSpeedMiddle + (maxSpeedMiddle * ((Math.abs(newMiddleTargets) - Math.abs(middleMotor.getCurrentPosition()))/(Math.abs(slowDownAtMiddle) * COUNTS_PER_INCH)));
+                    currentPowerMiddle = minSpeedMiddle + (maxSpeedMiddle * (((Math.abs(newMiddleTargets) - Math.abs(middleMotor.getCurrentPosition()))/((Math.abs(slowDownAtMiddle)) * COUNTS_PER_INCH_SIDE))));
                     stateAtMid = 2;
                 }
-                leftMotor.setPower(currentPowerSide);
-                rightMotor.setPower(currentPowerSide);
+
+                if(runThroughs > 8) {
+                    atHere = true;
+                    angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                    angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+                    endingAngle = Double.parseDouble(angleDouble);
+                    angleError = endingAngle - startingAngle;
+                    sideChangePower = (angleError * 3)/100;
+                }
+                leftMotor.setPower(currentPowerSide + sideChangePower);
+                rightMotor.setPower(currentPowerSide - sideChangePower);
                 middleMotor.setPower(currentPowerMiddle);
                 middleMotor2.setPower(currentPowerMiddle);
-
+                telemetry.addData("Angle Error", Double.parseDouble(angleDouble) - startingAngle);
                 telemetry.addData("Power Side", currentPowerSide);
                 telemetry.addData("Power Middle", currentPowerMiddle);
                 telemetry.addData("At Side", stateAt);
@@ -608,8 +613,21 @@ public class AutonomousSimple extends LinearOpMode {
                 telemetry.addData("Target Side", inchesSide);
                 telemetry.addData("Target Middle", inchesMiddle);
                 telemetry.addData("Current Side" , leftMotor.getCurrentPosition()/COUNTS_PER_INCH);
-                telemetry.addData("Current Middle", middleMotor.getCurrentPosition()/COUNTS_PER_INCH);
+                telemetry.addData("Current Middle", middleMotor.getCurrentPosition()/COUNTS_PER_INCH_SIDE);
+                if(Math.abs(leftMotor.getCurrentPosition()) < newSideTargets) {
+                    telemetry.addLine("1");
+                }
+                if(Math.abs(rightMotor.getCurrentPosition()) < newSideTargets) {
+                    telemetry.addLine("2");
+                }
+                if(Math.abs(middleMotor.getCurrentPosition()) < newMiddleTargets) {
+                    telemetry.addLine("3");
+                }
+                if(Math.abs(middleMotor2.getCurrentPosition()) < newMiddleTargets) {
+                    telemetry.addLine("4");
+                }
                 telemetry.update();
+                runThroughs++;
             }
         }
         if(end == true) {
@@ -618,13 +636,12 @@ public class AutonomousSimple extends LinearOpMode {
             middleMotor.setPower(0);
             middleMotor2.setPower(0);
         }
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        telemetry.addData("Current", (leftMotor.getCurrentPosition()/COUNTS_PER_INCH) - inchesSide);
-        telemetry.addData("Current Middle", (middleMotor.getCurrentPosition()/COUNTS_PER_INCH) - inchesMiddle);
+
+        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+        telemetry.addData("Side Error", inchesSide - (leftMotor.getCurrentPosition()/COUNTS_PER_INCH));
+        telemetry.addData("Middle Error", inchesMiddle - (middleMotor.getCurrentPosition()/COUNTS_PER_INCH_SIDE));
+        telemetry.addData("Angle Error", startingAngle - Double.parseDouble(angleDouble));
         telemetry.update();
 
     }
@@ -645,8 +662,8 @@ public class AutonomousSimple extends LinearOpMode {
             middleMotor.setTargetPosition(newMiddleTarget);
             middleMotor2.setTargetPosition(newMiddleTarget);
             // Turn On RUN_TO_POSITION
-            middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            middleMotor.setMode(RUN_TO_POSITION);
+            middleMotor2.setMode(RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -703,8 +720,8 @@ public class AutonomousSimple extends LinearOpMode {
             leftMotor.setTargetPosition(newLeftTarget);
             rightMotor.setTargetPosition(newRightTarget);
             // Turn On RUN_TO_POSITION
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftMotor.setMode(RUN_TO_POSITION);
+            rightMotor.setMode(RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -760,8 +777,8 @@ public class AutonomousSimple extends LinearOpMode {
             leftMotor.setTargetPosition(newLeftTarget);
             rightMotor.setTargetPosition(newRightTarget);
             // Turn On RUN_TO_POSITION
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftMotor.setMode(RUN_TO_POSITION);
+            rightMotor.setMode(RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -814,7 +831,7 @@ public class AutonomousSimple extends LinearOpMode {
             middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             // Determine new target position, and pass to motor controller
-            newMiddleTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((middleInches) * COUNTS_PER_INCH);
+            newMiddleTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((middleInches) * COUNTS_PER_INCH_SIDE);
             newLeftTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((rightInches) * COUNTS_PER_INCH);
             newRightTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((leftInches) * COUNTS_PER_INCH);
             middleMotor.setTargetPosition(newMiddleTarget);
@@ -822,10 +839,10 @@ public class AutonomousSimple extends LinearOpMode {
             rightMotor.setTargetPosition(newRightTarget);
             middleMotor2.setTargetPosition(newMiddleTarget);
             // Turn On RUN_TO_POSITION
-            middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            middleMotor.setMode(RUN_TO_POSITION);
+            leftMotor.setMode(RUN_TO_POSITION);
+            rightMotor.setMode(RUN_TO_POSITION);
+            middleMotor2.setMode(RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -836,6 +853,11 @@ public class AutonomousSimple extends LinearOpMode {
 
 
             // keep looping while we are still active, and there is time left, and both motors are running.
+            boolean firstTimeCheck = true;
+            boolean secondTimeCheck = true;
+            double timeHere = 0;
+            double timeHereSecond = 0;
+
             while (opModeIsActive() &&
                     (runtime.seconds() < timeoutS) &&
                     (middleMotor.isBusy() || leftMotor.isBusy() || rightMotor.isBusy() || middleMotor2.isBusy())) {
@@ -845,6 +867,101 @@ public class AutonomousSimple extends LinearOpMode {
                 telemetry.addData("Middle Path", newMiddleTarget);
                 telemetry.addData("Current Left", leftMotor.getCurrentPosition());
                 telemetry.addData("Current Middle", middleMotor.getCurrentPosition());
+                telemetry.update();
+                if(!leftMotor.isBusy() && !rightMotor.isBusy()) {
+                    if(firstTimeCheck) {
+                        timeHere = System.currentTimeMillis();
+                        firstTimeCheck = false;
+                    }
+                }
+                if(!middleMotor.isBusy() && !middleMotor2.isBusy()) {
+                    if(secondTimeCheck) {
+                        timeHereSecond = System.currentTimeMillis();
+                        secondTimeCheck = false;
+                    }
+                }
+
+                // Allow time for other processes to run.
+                idle();
+            }
+
+            // Stop all motion;
+            middleMotor.setPower(0);
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+            middleMotor2.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            telemetry.addData("Error", (timeHereSecond - timeHere)/1000);
+            telemetry.update();
+            Thread.sleep(4000);
+
+
+            //  sleep(250);   // optional pause after each move
+        }
+    }
+    public void encoderDriveAngle(double power, double inches, double angle) {
+        int newMiddleTarget = 0;
+        int newLeftTarget = 0;
+        int newRightTarget = 0;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            // Determine new target position, and pass to motor controller
+            newMiddleTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((inches) * COUNTS_PER_INCH_SIDE * roundDouble(Math.sin(Math.toRadians(angle))));
+            newLeftTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((inches) * COUNTS_PER_INCH * roundDouble(Math.cos(Math.toRadians(angle))));
+            newRightTarget = /*robot.leftMotor.getCurrentPosition() + */(int) ((inches) * COUNTS_PER_INCH * roundDouble(Math.cos(Math.toRadians(angle))));
+            middleMotor.setTargetPosition(newMiddleTarget);
+            leftMotor.setTargetPosition(newLeftTarget);
+            rightMotor.setTargetPosition(newRightTarget);
+            middleMotor2.setTargetPosition(newMiddleTarget);
+            // Turn On RUN_TO_POSITION
+            middleMotor.setMode(RUN_TO_POSITION);
+            leftMotor.setMode(RUN_TO_POSITION);
+            rightMotor.setMode(RUN_TO_POSITION);
+            middleMotor2.setMode(RUN_TO_POSITION);
+            pidStuff.f = 40;
+            middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
+            middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
+
+            // reset the timeout time and start motion.
+            double midPower = roundDouble(power * Math.sin(Math.toRadians(angle)));
+            double sidePower = roundDouble(power * Math.cos(Math.toRadians(angle)));
+            middleMotor.setPower(midPower);
+            leftMotor.setPower(sidePower);
+            rightMotor.setPower(sidePower);
+            middleMotor2.setPower(midPower);
+
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() &&
+                    ((Math.abs(middleMotor.getCurrentPosition())) < Math.abs(roundDouble(Math.sin(Math.toRadians(angle))) * COUNTS_PER_INCH_SIDE * inches) || Math.abs(leftMotor.getCurrentPosition()) < (Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches)) || Math.abs(rightMotor.getCurrentPosition()) < Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches))) {
+
+                // Display it for the driver.
+                telemetry.addData("Left Path", newLeftTarget);
+                telemetry.addData("Middle Path", newMiddleTarget);
+                telemetry.addData("Current Left", leftMotor.getCurrentPosition());
+                telemetry.addData("Current Middle", middleMotor.getCurrentPosition());
+                telemetry.addData("Side Power", sidePower);
+                telemetry.addData("Mid Power", midPower);
+                if ((Math.abs(middleMotor.getCurrentPosition())) < Math.abs(roundDouble(Math.sin(Math.toRadians(angle))) * COUNTS_PER_INCH_SIDE * inches)) {
+                    telemetry.addLine("1");
+                    telemetry.addData("Yea", roundDouble(Math.sin(Math.toRadians(angle))));
+                }
+                if (Math.abs(leftMotor.getCurrentPosition()) < (Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches))) {
+                    telemetry.addLine("2");
+                }
+                if (Math.abs(rightMotor.getCurrentPosition()) < Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches)) {
+                    telemetry.addLine("3");
+                }
                 telemetry.update();
 
                 // Allow time for other processes to run.
@@ -862,10 +979,74 @@ public class AutonomousSimple extends LinearOpMode {
             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+            pidStuff.f = 11.2;
+            middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
+            middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
 
 
             //  sleep(250);   // optional pause after each move
+        }
+    }
+    public void releaseArm() {
+        hangArm.setMode(RUN_TO_POSITION);
+        hangArm.setTargetPosition(30);
+        hangArm.setPower(.8);
+        while(hangArm.isBusy()) {
+            telemetry.addData("Lock Arm", hangArm.getCurrentPosition());
+            telemetry.update();
+        }
+        //hangArm.setPower(0);
+
+        hangArmLock.setPosition(.45);
+        telemetry.addData("Lock Arm", hangArm.getPower());
+        telemetry.update();
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hangArm.setPower(0);
+
+        hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hangArm.setMode(RUN_TO_POSITION);
+        hangArm.setTargetPosition(-2800);
+        hangArm.setPower(-.7);
+        while(hangArm.isBusy()) {
+            telemetry.addData("Pos", hangArm.getCurrentPosition());
+            telemetry.update();
+        }
+        hangArm.setPower(0);
+
+
+        middleMotor.setMode(RUN_TO_POSITION);
+        middleMotor2.setMode(RUN_TO_POSITION);
+        //
+        middleMotor.setTargetPosition(400);
+        middleMotor2.setTargetPosition(400);
+        middleMotor.setPower(.4);
+        middleMotor2.setPower(.4);
+        while(middleMotor.isBusy() && middleMotor2.isBusy()) {
+            telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
+            telemetry.update();
+        }
+        middleMotor.setPower(0);
+        middleMotor2.setPower(0);
+
+    }
+    public void realignRobot() {
+        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+        double currentAngle = Double.parseDouble(angleDouble);
+        double sidePower = ((currentAngle - initialAngle) * 3)/100;
+        while(Double.parseDouble(angleDouble) > (initialAngle + 3) || Double.parseDouble(angleDouble) < (initialAngle - 3)) {
+            telemetry.addData("Current Angle", angleDouble);
+            telemetry.update();
+            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+            currentAngle = Double.parseDouble(angleDouble);
+            sidePower = ((currentAngle - initialAngle) * 3)/100;
+            leftMotor.setPower(sidePower);
+            rightMotor.setPower(-sidePower);
         }
     }
     private void initVuforia() {
@@ -898,6 +1079,11 @@ public class AutonomousSimple extends LinearOpMode {
     }
     String format(OpenGLMatrix transformationMatrix) {
         return (transformationMatrix != null) ? transformationMatrix.formatAsTransform() : "null";
+    }
+    public double roundDouble(double x){
+        DecimalFormat twoDForm = new DecimalFormat("0.########");
+        String str = twoDForm.format(x);
+        return Double.valueOf(str);
     }
 
 }
