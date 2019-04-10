@@ -56,6 +56,7 @@ import java.util.Locale;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
 /**
@@ -250,7 +251,7 @@ public class AutonomousWithVision extends LinearOpMode {
         tfod.activate();
         int objectsFound = 0;
         int position = 0;
-        while(objectsFound != 3) {
+        while(objectsFound != 3 && opModeIsActive()) {
             if (tfod != null) {
                 // getUpdatedRecognitions() will return null if no new information is available since
                 // the last time that call was made.
@@ -1153,19 +1154,19 @@ public class AutonomousWithVision extends LinearOpMode {
         telemetry.update();
     }
     public void releaseArm() throws InterruptedException {
-        hangArm.setMode(RUN_USING_ENCODER);
-        hangArm.setPower(.5);
-        Thread.sleep(200);
+        hangArm.setMode(RUN_WITHOUT_ENCODER);
+        hangArm.setPower(.7);
+        Thread.sleep(100);
         //hangArm.setPower(0);
 
         hangArmLock.setPosition(.35);
-        Thread.sleep(1000);
+        Thread.sleep(350);
         hangArm.setPower(0);
 
         //hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hangArm.setMode(RUN_TO_POSITION);
-        hangArm.setTargetPosition(-3350);
-        hangArm.setPower(-.5);
+        hangArm.setTargetPosition(-5600);
+        hangArm.setPower(-.7);
         while(hangArm.isBusy()) {
             telemetry.addData("Pos", hangArm.getCurrentPosition());
             telemetry.update();
