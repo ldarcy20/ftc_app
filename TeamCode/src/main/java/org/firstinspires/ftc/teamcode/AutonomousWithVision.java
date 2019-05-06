@@ -343,6 +343,7 @@ public class AutonomousWithVision extends LinearOpMode {
 
             //encoderDriveMiddle(.5,-46,60);
             encoderDriveProfiledMiddle(-.1,-.8,-40,-8,true);*/
+            moveArmToPos(0, 0, -500, .7, .4, .1);
 
             /*turn2();
             //Thread.sleep(100);
