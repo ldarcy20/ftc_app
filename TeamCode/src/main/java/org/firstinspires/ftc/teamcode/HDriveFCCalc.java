@@ -7,9 +7,18 @@ public class HDriveFCCalc {
     double leftMove;
     double rightMove;
     double middleMove;
+    double tempVal;
+    double newVal;
     public void calculateMovement (double joystickX, double joystickY, double turnStickX, double angle) {
-        double robotAngle = -angle/360 * 2 * Math.PI;
-        double tempVal = joystickY * Math.cos(robotAngle) - joystickX * Math.sin(robotAngle);
+        double robotAngle;
+        if(angle == 180) {
+            robotAngle = 0;
+        }
+        else {
+            robotAngle = -angle / 360 * 2 * Math.PI;
+        }
+        newVal = robotAngle;
+        tempVal = joystickY * Math.cos(robotAngle) - joystickX * Math.sin(robotAngle);
         double driveMiddle = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
         double driveLeft = tempVal + turnStickX/2;
         double driveRight = tempVal - turnStickX/2;
@@ -30,6 +39,7 @@ public class HDriveFCCalc {
         rightMove = driveRight;
         middleMove = driveMiddle;
     }
+    public double isStupid(){ return tempVal; }
     public double getLeftDrive(){
         return leftMove;
     }
