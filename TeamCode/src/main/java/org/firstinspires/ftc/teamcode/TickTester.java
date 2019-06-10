@@ -277,6 +277,24 @@ public class TickTester extends OpMode {
         //telemetry.addData("Counter",counter);
         //telemetry.update();
         counter++;
+        if(gamepad2.dpad_up) {
+            elbowMotor.setPower(.2);
+        }
+        else if(gamepad2.dpad_up) {
+            elbowMotor.setPower(-.2);
+        }
+        else {
+            elbowMotor.setPower(0);
+        }
+        if(gamepad2.dpad_right) {
+            shoulderMotor.setPower(.2);
+        }
+        else if(gamepad2.dpad_left) {
+            shoulderMotor.setPower(-.2);
+        }
+        else {
+            shoulderMotor.setPower(0);
+        }
     }
     public double elbowAngle(double currentPos) {
         double finalPos = 90-shoulderAngle((double)shoulderMotor.getCurrentPosition()) +80+ ((currentPos + (2300-1576))/(2300*4)) * 360;
