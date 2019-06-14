@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.view.animation.RotateAnimation;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -68,13 +70,16 @@ public class HDriveTeleop2019 extends OpMode {
     boolean armMode = false;
     boolean isRunningArm = false;
     boolean armMoved = false;
+    boolean sideMoved = false;
     boolean heldPositionLast = false;
+    boolean heldSidePositionLast = false;
     boolean firstTimeMovingLander = true;
     boolean isMovingTowardsLander = true;
     boolean firstTimeStopedLander = false;
     boolean firstTimeCrater = true;
     boolean firstTimeLanderMove = true;
     int heldElbowPos = 0;
+    int heldSidePos = 0;
     int heldShoulderPos = 0;
     float rightX;
     double leftX;
@@ -149,7 +154,7 @@ public class HDriveTeleop2019 extends OpMode {
         rotationMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff.p = 5;
-        pidStuff.i = .4;
+        pidStuff.i = 4;
         pidStuff.d = 0;
         pidStuff.f = 10.2;
         pidStuff.algorithm = MotorControlAlgorithm.PIDF;
@@ -182,6 +187,10 @@ public class HDriveTeleop2019 extends OpMode {
         telemetry.addData("Elbow Angle", elbowAngle(elbowMotor.getCurrentPosition()));
         telemetry.addData("Arm Mode", armMode);
         telemetry.addData("Arm Moved", armMoved);
+        telemetry.addData("Elbow Angle", elbowAngle(elbowMotor.getCurrentPosition()));
+        telemetry.addData("Shoulder Angle", shoulderAngle(shoulderMotor.getCurrentPosition()));
+        telemetry.addData("Elbow Vel", armCalculator.getElbowMotorSpeed());
+        telemetry.addData("Shoulder Vel", armCalculator.getShoulderMotorSpeed());
         telemetry.update();
         armCalculator.calculateSpeed(gamepad2.left_stick_x, -gamepad2.right_stick_y, shoulderMotor, elbowMotor, shoulderAngle((double) shoulderMotor.getCurrentPosition()), elbowAngle((double) elbowMotor.getCurrentPosition()), telemetry);
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
@@ -229,23 +238,34 @@ public class HDriveTeleop2019 extends OpMode {
             //Far Crater: Shoulder: 1920 Elbow: 1180: rotation: 1920
 
              */
+            sideMoved = true;
             armMoved = true;
             isRunningArm = true;
             if(firstTimeCrater) {
                 firstTimeCrater = false;
             }
-             if(craterState == 0) {
-                 middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                 middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                 middleMotor.setTargetPosition(760);
-                 middleMotor2.setTargetPosition(760);
-                 middleMotor.setPower(.3);
-                 middleMotor2.setPower(.3);
-                 craterState = 1;
+            if(craterState == 0) {
+                middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                shoulderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                middleMotor.setTargetPosition(760);
+                middleMotor2.setTargetPosition(760);
+                shoulderMotor.setTargetPosition(200);
+                middleMotor.setPower(.3);
+                middleMotor2.setPower(.3);
+                shoulderMotor.setPower(.4);
+                craterState = 1;
              }
              else if(craterState == 1) {
-                if(middleMotor.getCurrentPosition() > 750) {
+                if(middleMotor.getCurrentPosition() > 750 && shoulderMotor.getCurrentPosition() < 400) {
                     craterState = 2;
+                    rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    rotationMotor.setTargetPosition(2200);
+                    rotationMotor.setPower(.4);
+                }
+             }
+             else if(craterState == 2) {
+                if(rotationMotor.getCurrentPosition() > 2100) {
                     middleMotor.setTargetPosition(960);
                     middleMotor.setPower(.1);
                     shoulderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -253,34 +273,20 @@ public class HDriveTeleop2019 extends OpMode {
                     rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     shoulderMotor.setTargetPosition(3074);
                     elbowMotor.setTargetPosition(-1180);
-                    rotationMotor.setTargetPosition(3263);
+                    rotationMotor.setTargetPosition(3100);
+                    shoulderMotor.setPower(.4);
+                    rotationMotor.setPower(.4);
+                    elbowMotor.setPower(.4);
+                    craterState = 3;
                 }
              }
-             else if(craterState == 2) {
-                 if(rotationMotor.getCurrentPosition() < 3263) {
-                     rotationMotor.setPower(.4);
-                 }
-                 else {
-                     rotationMotor.setPower(-.4);
-                 }
-                 if(shoulderMotor.getCurrentPosition() < 3074) {
-                     shoulderMotor.setPower(.4);
-                 }
-                 else {
-                     shoulderMotor.setPower(-.4);
-                 }
-                 if(elbowMotor.getCurrentPosition() < -1180) {
-                     elbowMotor.setPower(.4);
-                 }
-                 else {
-                     elbowMotor.setPower(-.4);
-                 }
+             else if(craterState == 3) {
+                shoulderMotor.setTargetPosition(3074);
+                rotationMotor.setPower(.4);
+                elbowMotor.setPower(.4);
              }
         }
-        else {
-            firstTimeCrater = true;
-        }
-        if (gamepad2.a) {
+        else if (gamepad2.a) {
             //Lander
             /*
             Shoulder: 1437
@@ -323,6 +329,7 @@ public class HDriveTeleop2019 extends OpMode {
         else {
             firstTimeRaisingArm = true;
             firstTimeLanderMove = true;
+            firstTimeCrater = true;
         }
 
         if (gamepad2.x && isPressedX) {
@@ -446,7 +453,7 @@ public class HDriveTeleop2019 extends OpMode {
                 middleMotor2.setPower(0);
                 pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
                 pidStuff.p = 5;
-                pidStuff.i = .4;
+                pidStuff.i = 4;
                 pidStuff.d = 0;
                 pidStuff.f = 10.2;
                 pidStuff.algorithm = MotorControlAlgorithm.PIDF;
@@ -466,20 +473,24 @@ public class HDriveTeleop2019 extends OpMode {
         if (gamepad1.dpad_left) {
             middleMotor.setPower(.2);
             middleMotor2.setPower(.2);
+            sideMoved = true;
         }
         else if(gamepad1.dpad_right) {
             middleMotor.setPower(-.2);
             middleMotor2.setPower(-.2);
+            sideMoved = true;
         }
         if (gamepad1.dpad_up) {
             leftMotor.setPower(.2);
             rightMotor.setPower(.2);
+            sideMoved = true;
         }
         else if(gamepad1.dpad_down) {
             leftMotor.setPower(-.2);
             rightMotor.setPower(-.2);
+            sideMoved = true;
         }
-        if (isGettingOnLander == false && !gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.dpad_down && !gamepad1.dpad_up && !isMovingTowardsLander) {
+        if (isGettingOnLander == false && !gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.dpad_down && !gamepad1.dpad_up && !isMovingTowardsLander && !gamepad2.y) {
             if (yPressed == false) {
                 leftX = gamepad1.left_stick_x;
                 leftY = gamepad1.left_stick_y;
@@ -520,6 +531,9 @@ public class HDriveTeleop2019 extends OpMode {
             else if(!gamepad1.left_stick_button) {
                 isPressedY1Gamepad = true;
             }
+            if(calculator.getLeftDrive() != 0 && calculator.getRightDrive() != 0 && calculator.getMiddleDrive() != 0) {
+                sideMoved = true;
+            }
             leftMotor.setPower(speed * calculator.getLeftDrive());
             rightMotor.setPower(speed * calculator.getRightDrive());
             middleMotor.setPower(speed * calculator.getMiddleDrive());
@@ -531,7 +545,11 @@ public class HDriveTeleop2019 extends OpMode {
         else{
             heldPositionLast = false;
         }
+        if(!sideMoved) {
+            holdSideMotorsPosition();
+        }
         armMoved = false;
+        sideMoved = false;
     }
     public void resetEncoderTicks() {
         double currentSideGoal = 0 - offsetSide;
@@ -569,8 +587,8 @@ public class HDriveTeleop2019 extends OpMode {
         angleError = endingAngle - startingAngle;
         sideChange = (angleError)/100;
         if(leftMotor.isBusy() && rightMotor.isBusy()) {
-                leftMotor.setPower(sidePower + sideChange);
-                rightMotor.setPower(sidePower - sideChange);
+            leftMotor.setPower(sidePower + sideChange);
+            rightMotor.setPower(sidePower - sideChange);
         }
         if(!rightMotor.isBusy() || !leftMotor.isBusy()) {
             if(rightMotor.getMode() == RUN_TO_POSITION || leftMotor.getMode() == RUN_TO_POSITION) {
@@ -593,7 +611,7 @@ public class HDriveTeleop2019 extends OpMode {
                 firstTimeStopedLander = false;
             }
         }
-
+        sideMoved = true;
 
     }
     public void getOnLander() {
@@ -645,7 +663,8 @@ public class HDriveTeleop2019 extends OpMode {
     }
 
     public double elbowAngle(double currentPos) {
-        double finalPos = 90 - shoulderAngle((double) shoulderMotor.getCurrentPosition()) + 45 + ((currentPos + (2300 - 1576)) / (2300 * 4)) * 360;
+        //double finalPos = 90 - shoulderAngle((double) shoulderMotor.getCurrentPosition()) + 45 + ((currentPos + (2300 - 1576)) / (2300 * 4)) * 360;
+        double finalPos = 82 + (double)currentPos/(2350*4)*360;
         return finalPos;
     }
 
@@ -675,6 +694,18 @@ public class HDriveTeleop2019 extends OpMode {
         elbowMotor.setTargetPosition(heldElbowPos);
         shoulderMotor.setTargetPosition(heldShoulderPos);
 
+    }
+    public void holdSideMotorsPosition() {
+        if(!heldSidePositionLast){
+            heldSidePos = elbowMotor.getCurrentPosition();
+            heldSidePositionLast = true;
+            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+        leftMotor.setPower(.2);
+        rightMotor.setPower(.2);
+        leftMotor.setTargetPosition(heldSidePos);
+        rightMotor.setTargetPosition(heldSidePos);
     }
     public void releaseArm(){
         if(shoulderMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || elbowMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || rotationMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION); {
