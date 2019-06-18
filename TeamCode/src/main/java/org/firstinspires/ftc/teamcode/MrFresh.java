@@ -603,10 +603,9 @@ public class MrFresh extends OpMode {
             rotationMotor.setTargetPosition(-525);
             shoulderMotor.setTargetPosition(3807);
             elbowMotor.setTargetPosition(-380);
-            leftMotor.setTargetPosition(0);
-            rightMotor.setTargetPosition(0);
-            leftMotor.setPower(.2);
-            rightMotor.setPower(.2);;
+            elbowMotor.setPower(.2);
+            rotationMotor.setPower(.2);
+            shoulderMotor.setPower(.2);
             craterState = 1;
         }
         if(craterState == 1) {
