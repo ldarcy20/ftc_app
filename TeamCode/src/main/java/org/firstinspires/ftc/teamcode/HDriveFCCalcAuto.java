@@ -64,6 +64,7 @@ public class HDriveFCCalcAuto {
 
         public int getRightTicks(){ return side; }
         public int getLeftTicks() { return side; }
-        public int getMiddleTicks() {return middle; }
+        public int getMiddleTicks() {return middle;
+        }
 
 }

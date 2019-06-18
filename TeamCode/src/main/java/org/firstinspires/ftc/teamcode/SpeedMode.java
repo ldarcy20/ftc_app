@@ -51,10 +51,16 @@ public class SpeedMode extends OpMode {
 
     @Override
     public void loop() {
-        leftMotor.setPower(gamepad1.left_stick_y);
-        rightMotor.setPower(gamepad1.left_stick_y);
-        middleMotor.setPower(gamepad1.left_stick_x);
-        middleMotor2.setPower(gamepad1.left_stick_x);
+        if(gamepad1.right_stick_x != 0) {
+            leftMotor.setPower(gamepad1.left_stick_y);
+            rightMotor.setPower(gamepad1.left_stick_y);
+            middleMotor.setPower(gamepad1.left_stick_x);
+            middleMotor2.setPower(gamepad1.left_stick_x);
+        }
+        else {
+            leftMotor.setPower(gamepad1.right_stick_x);
+            rightMotor.setPower(-gamepad1.right_stick_x);
+        }
         telemetry.addData("left power", leftMotor.getPower());
         telemetry.update();
     }
