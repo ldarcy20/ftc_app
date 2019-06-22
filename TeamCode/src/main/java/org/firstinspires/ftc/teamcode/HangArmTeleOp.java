@@ -12,12 +12,13 @@ public class HangArmTeleOp extends OpMode{
     DcMotorEx hangMotor;
     Servo latch;
     boolean newXPressed = true;
+    double armPos = .45;
 
     @Override
     public void init() {
         hangMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "Hang Arm");
         hangMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hangMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        hangMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         latch = hardwareMap.servo.get("Hang Arm Lock");
         latch.setPosition(.45);
 
@@ -33,6 +34,17 @@ public class HangArmTeleOp extends OpMode{
         }
         else {
             hangMotor.setPower(0);
+        }
+        if(gamepad1.dpad_up) {
+            armPos = armPos + .001;
+            latch.setPosition(armPos);
+        }
+        else if(gamepad1.dpad_down) {
+            armPos = armPos - .001;
+            latch.setPosition(armPos);
+        }
+        else {
+            armPos = armPos;
         }
 
         if (latchPos == 0 && gamepad1.x && newXPressed){
@@ -50,6 +62,7 @@ public class HangArmTeleOp extends OpMode{
         else if (!gamepad1.x){
             newXPressed = true;
         }
+        telemetry.addData("Latch Pos", armPos);
         telemetry.addData("Arm Pos", hangMotor.getCurrentPosition());
         telemetry.update();
 

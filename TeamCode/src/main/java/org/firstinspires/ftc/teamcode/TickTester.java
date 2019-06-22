@@ -134,6 +134,7 @@ public class TickTester extends OpMode {
         hangArm.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
 
         elbowMotor.setDirection(DcMotor.Direction.REVERSE);
+        rotationMotor.setDirection(DcMotor.Direction.REVERSE);
 
     }
 
