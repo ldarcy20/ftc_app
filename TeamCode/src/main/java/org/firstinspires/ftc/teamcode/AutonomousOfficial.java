@@ -56,6 +56,7 @@ import java.util.Locale;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
 /**
@@ -192,8 +193,6 @@ public class AutonomousOfficial extends LinearOpMode {
 
 
         waitForStart();
-
-
         moveArmToPos(350,0,0,.5,.1,.1);
         releaseArm();
         realignRobot();
@@ -259,6 +258,7 @@ public class AutonomousOfficial extends LinearOpMode {
             moveArmToPos(-1300,2700,-800,-.4,.1,.1);
 
             moveBaseAndArm(-.4,.1,-.5,.4,-.1,19,0,150,30,-800,telemetry);
+            moveBaseAndArm(.1, -.2, 0, 0, 0, 5, 5, 0,0,0,telemetry);
         }
         else if(position == 3) {
             telemetry.addLine("Should be Right");
@@ -407,26 +407,20 @@ public class AutonomousOfficial extends LinearOpMode {
         telemetry.update();
     }
     public void releaseArm() throws InterruptedException {
-        hangArm.setMode(RUN_USING_ENCODER);
-        hangArm.setPower(.5);
-        Thread.sleep(200);
-        //hangArm.setPower(0);
-
+        hangArm.setMode(RUN_WITHOUT_ENCODER);
+        hangArm.setPower(0);
         hangArmLock.setPosition(.35);
+        //hangArm.setPower(0);
         Thread.sleep(1000);
         hangArm.setPower(0);
 
         //hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hangArm.setMode(RUN_TO_POSITION);
-        hangArm.setTargetPosition(-3350);
-        hangArm.setPower(-.5);
-        while(hangArm.isBusy()) {
-            telemetry.addData("Pos", hangArm.getCurrentPosition());
+        while(hangArm.getCurrentPosition() > -5130){
+            telemetry.addData("Hang Arm Pos", hangArm.getCurrentPosition());
             telemetry.update();
         }
+        hangArm.setMode(RUN_USING_ENCODER);
         hangArm.setPower(0);
-
-
         middleMotor.setMode(RUN_TO_POSITION);
         middleMotor2.setMode(RUN_TO_POSITION);
         rotationMotor.setMode(RUN_TO_POSITION);
