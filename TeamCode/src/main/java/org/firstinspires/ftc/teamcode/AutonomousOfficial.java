@@ -244,10 +244,19 @@ public class AutonomousOfficial extends LinearOpMode {
         }
         if(position == 1) {
             telemetry.addLine("Should be Left");
-            moveBaseAndArm(.6, .45, 0.1, .1, .4, 30, 10,0,350,0, telemetry);
+            moveBaseAndArm(.6, .45, 0.1, .1, .4, 33, 11,0,350,0, telemetry);
             moveArmToPos(350,2850,-1200,.3,.6,.4);
             moveArmToPos(-1300,2850,-1200,-.4,.1,.1);
-            moveArmToPos(0, 0, -500, .7, .4, .1);
+            moveArmToPos(0, 0, 0, .7, .4, -.1);
+            moveBaseAndArm(-.6, -.45, 0, 0, 0, -30, -10,0,0,0, telemetry);
+            leftMotor.setMode(RUN_USING_ENCODER);
+            rightMotor.setMode(RUN_USING_ENCODER);
+            while(leftMotor.getCurrentPosition() <= 1000){
+                leftMotor.setPower(-.5);
+                rightMotor.setPower(.5);
+            }
+            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
+
 
         }
         else if(position == 2) {
@@ -258,13 +267,30 @@ public class AutonomousOfficial extends LinearOpMode {
 
             moveBaseAndArm(-.4,.1,-.5,.4,-.1,19,0,150,30,-800,telemetry);
             moveBaseAndArm(.1, -.2, 0, 0, 0, 5, 5, 0,0,0,telemetry);
+            moveBaseAndArm(-.5,0,0,0,0,-25,0,0,0,0,telemetry);
+            leftMotor.setMode(RUN_USING_ENCODER);
+            rightMotor.setMode(RUN_USING_ENCODER);
+            while(leftMotor.getCurrentPosition() <= 1000){
+                leftMotor.setPower(-.5);
+                rightMotor.setPower(.5);
+            }
+            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
         }
         else if(position == 3) {
             telemetry.addLine("Should be Right");
             moveBaseAndArm(.3,-.5,.1,.1,.7,36,-15.27,0,350,0,telemetry);
-            moveArmToPos(550,3000,-150,.7,.7,.6);
-            moveArmToPos(-1300,2700,-150,-.7,.1,.1);
-            moveArmToPos(0, 0, -500, .7, .4, .1);
+            moveArmToPos(550,3000,0,.7,.7,.6);
+            moveArmToPos(-1300,2700,0,-.7,.1,.1);
+            moveArmToPos(0, 0, 0, .7, .4, -.1);
+            moveBaseAndArm(-.3,.3,0,0,0,-24,14,0,0,0,telemetry);
+            /*leftMotor.setMode(RUN_USING_ENCODER);
+            rightMotor.setMode(RUN_USING_ENCODER);
+            while(leftMotor.getCurrentPosition() <= 1000){
+                leftMotor.setPower(-.5);
+                rightMotor.setPower(.5);
+            }
+            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);*/
+
             telemetry.update();
         }
         else {
