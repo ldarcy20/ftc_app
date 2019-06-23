@@ -193,7 +193,6 @@ public class AutonomousOfficial extends LinearOpMode {
 
 
         waitForStart();
-        moveArmToPos(350,0,0,.5,.1,.1);
         releaseArm();
         realignRobot();
         angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
@@ -262,7 +261,7 @@ public class AutonomousOfficial extends LinearOpMode {
         }
         else if(position == 3) {
             telemetry.addLine("Should be Right");
-            moveBaseAndArm(.3,-.5,.1,.1,.7,33,-14,0,350,0,telemetry);
+            moveBaseAndArm(.3,-.5,.1,.1,.7,36,-15.27,0,350,0,telemetry);
             moveArmToPos(550,3000,-150,.7,.7,.6);
             moveArmToPos(-1300,2700,-150,-.7,.1,.1);
             moveArmToPos(0, 0, -500, .7, .4, .1);
@@ -427,7 +426,7 @@ public class AutonomousOfficial extends LinearOpMode {
         //
         middleMotor.setTargetPosition(400);
         middleMotor2.setTargetPosition(400);
-        rotationMotor.setTargetPosition(-800);
+        rotationMotor.setTargetPosition(-950);
         middleMotor.setPower(.6);
         middleMotor2.setPower(.6);
         rotationMotor.setPower(-.7);

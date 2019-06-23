@@ -10,7 +10,23 @@ public class ExcessStuff {
     static boolean firstTime = true;
     static double startPos;
     static boolean finished = true;
+    static DcMotor leftMotor;
+    static DcMotor rightMotor;
+    static DcMotor middleMotor;
+    static DcMotor middleMotor2;
+    static DcMotor elbowMotor;
+    static DcMotor shoulderMotor;
+    static DcMotor rotationMotor;
+    public ExcessStuff(DcMotor leftMot, DcMotor rightMot, DcMotor middleMot, DcMotor middleMot2, DcMotor elbowMot, DcMotor shoulderMot, DcMotor rotationMot) {
+        leftMotor = leftMot;
+        rightMotor = rightMot;
+        middleMotor = middleMot;
+        middleMotor2 = middleMot2;
+        elbowMotor = elbowMot;
+        shoulderMotor = shoulderMot;
+        rotationMotor = rotationMot;
 
+    }
     static String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }
@@ -29,7 +45,6 @@ public class ExcessStuff {
         return finalPos;
     }
     static public double scaleSpeed (double maxSpeed, double minSpeed, double targetPos, double currentPos){
-
         if (firstTime){
             startPos = currentPos;
             firstTime = false;
@@ -55,6 +70,8 @@ public class ExcessStuff {
             return false;
         }
         return true;
+    }
+    static public void setSpeedMode() {
     }
 
 }

@@ -24,13 +24,14 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 public class MrFresh extends OpMode {
     HDriveFCCalc calculator;
     ArmCalculator armCalculator;
+    ExcessStuff excessStuff;
 
     //Ints, Doubles, Booleans, and Floats
     int landerState = 0;
     int hangArmLockCounter = 0;
     int priorRotationPos = 1700;
-    int priorElbowPos = -1488;
-    int priorShoulderPos = 3341;
+    int priorElbowPos = -1294;
+    int priorShoulderPos = 2963;
     int here = 0;
     int sideAdjusted = 0;
     int middleAdjusted = 0;
@@ -40,8 +41,7 @@ public class MrFresh extends OpMode {
     double bouncerPos = 0.0;
     double bicep = 18;
     double forearm = 17.25;
-    double startingElbowPos = 0;
-    double startingShoulderPos = 0;
+
     double speed = 1;
     double startingAngle = 0;
     double startingAngleLander = 0;
@@ -84,9 +84,8 @@ public class MrFresh extends OpMode {
     boolean firstTimeGeneral = true;
     boolean checkDpad = false;
     int heldElbowPos = 0;
-    int heldSidePosLeft = 0;
-    int heldSidePosRight = 0;
     int heldShoulderPos = 0;
+    int hangerState = 0;
     float rightX;
     double leftX;
     double leftY;
@@ -136,7 +135,7 @@ public class MrFresh extends OpMode {
         hangArmLock = hardwareMap.servo.get("Hang Arm Lock");
         calculator = new HDriveFCCalc();
         armCalculator = new ArmCalculator(bicep, forearm);
-
+        excessStuff = new ExcessStuff(leftMotor,rightMotor,middleMotor,middleMotor2,elbowMotor,shoulderMotor,rotationMotor);
         elbowMotor.setDirection(DcMotor.Direction.REVERSE);
         rotationMotor.setDirection(DcMotor.Direction.REVERSE);
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -177,9 +176,6 @@ public class MrFresh extends OpMode {
         hangArmLock.setPosition(.35);
     }
     public void loop() {
-        //leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //Always Resets these
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
         here++;
@@ -221,7 +217,6 @@ public class MrFresh extends OpMode {
         setZeros();
         checkAutoArmButtons();
         checkDeadReckonButton();
-
 
 
         if (!armMoved) {
@@ -375,6 +370,7 @@ public class MrFresh extends OpMode {
             getOnLander();
             isGettingOnLander = true;
         } else {
+            hangerState = 0;
             isGettingOnLander = false;
             firstTimeLander = true;
         }
@@ -445,7 +441,7 @@ public class MrFresh extends OpMode {
             if (fieldCentric) {
                 calculator.calculateMovement(leftX, leftY, rightX, Double.parseDouble(angleDouble) + offset);
             } else {
-                calculator.calculateMovement(leftX, leftY, rightX, 180);
+                calculator.calculateMovement(-leftX, -leftY, rightX, 0);
             }
             if (gamepad1.left_stick_button && isPressedY1Gamepad) {
                 if (speed == 1) {
@@ -546,47 +542,47 @@ public class MrFresh extends OpMode {
     }
     public void getOnLander() {
         if (firstTimeLander) {
-            landerState = 0;
+            hangerState = 0;
             hangArmLockCounter = 0;
         }
         firstTimeLander = false;
 
-        if (landerState == 0) {
+        if (hangerState == 0) {
             middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             middleMotor.setPower(-.2);
             middleMotor2.setPower(-.2);
-            landerState = 1;
-        } else if (landerState == 1) {
+            hangerState = 1;
+        } else if (hangerState == 1) {
             if (gamepad1.right_bumper == true) {
                 middleMotor.setPower(0);
                 middleMotor2.setPower(0);
-                landerState = 2;
+                hangerState = 2;
             }
-        } else if (landerState == 2) {
+        } else if (hangerState == 2) {
             hangArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);//.522
             hangArm.setTargetPosition(-2200);
             hangArm.setPower(-.5);
-            landerState = 3;
-        } else if (landerState == 3) {
+            hangerState = 3;
+        } else if (hangerState == 3) {
             if (hangArm.getCurrentPosition() < -2180) {
                 hangArm.setPower(.4);
                 hangArm.setTargetPosition(hangArm.getCurrentPosition());
                 hangArmLock.setPosition(.534);
-                landerState = 4;
+                hangerState = 4;
             }
-        } else if (landerState == 4) {
+        } else if (hangerState == 4) {
             hangArmLockCounter++;
             hangArm.setTargetPosition(hangArm.getCurrentPosition());
             if (hangArmLockCounter > 30) {
                 hangArmLock.setPosition(.534);
-                landerState = 5;
+                hangerState = 5;
             }
-        } else if (landerState == 5) {
+        } else if (hangerState == 5) {
             hangArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             hangArm.setPower(0);
-            landerState = 6;
-        } else if (landerState == 6) {
+            hangerState = 6;
+        } else if (hangerState == 6) {
             hangArm.setPower(0);
             hangArmLock.setPosition(.534);
         }
@@ -599,9 +595,7 @@ public class MrFresh extends OpMode {
         }
         else {
             craterState = 0;
-            if(gamepad1.left_bumper) {
-                landerState = 0;
-            }
+            landerState = 0;
             moveToBlocks = false;
             ballInLeft = false;
             ballInRight = false;
@@ -609,10 +603,10 @@ public class MrFresh extends OpMode {
         }
     }
     public void scoreInLander() {
+        armMoved = true;
         if(bumperPressedLander && !gamepad2.right_bumper) {
             bumperPressedLander = false;
         }
-        armMoved = true;
         if (landerState == 0) {//1550 middle motor change
             if(firstAutoButton = false) {
                 priorShoulderPos = shoulderMotor.getCurrentPosition();
@@ -812,7 +806,7 @@ public class MrFresh extends OpMode {
             double currentAngle = Double.parseDouble(ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle));
             double difference = startingAngleLander - currentAngle;
             if(difference > 90) {
-                landerState = 3;
+                craterState = 3;
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
             }
@@ -954,7 +948,7 @@ public class MrFresh extends OpMode {
             double currentAngle = Double.parseDouble(ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle));
             double difference = startingAngleLander - currentAngle;
             if(difference > 90) {
-                landerState = 3;
+                craterState = 3;
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
             }
