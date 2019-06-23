@@ -427,7 +427,7 @@ public class AutonomousOfficial extends LinearOpMode {
         //
         middleMotor.setTargetPosition(400);
         middleMotor2.setTargetPosition(400);
-        rotationMotor.setTargetPosition(-1600);
+        rotationMotor.setTargetPosition(-800);
         middleMotor.setPower(.6);
         middleMotor2.setPower(.6);
         rotationMotor.setPower(-.7);
