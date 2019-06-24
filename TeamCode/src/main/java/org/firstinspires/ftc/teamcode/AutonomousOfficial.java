@@ -283,13 +283,13 @@ public class AutonomousOfficial extends LinearOpMode {
             moveArmToPos(-1300,2700,0,-.7,.1,.1);
             moveArmToPos(0, 0, 0, .7, .4, -.1);
             moveBaseAndArm(-.3,.3,0,0,0,-24,14,0,0,0,telemetry);
-            /*leftMotor.setMode(RUN_USING_ENCODER);
+            leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
             while(leftMotor.getCurrentPosition() <= 1000){
                 leftMotor.setPower(-.5);
                 rightMotor.setPower(.5);
             }
-            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);*/
+            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
 
             telemetry.update();
         }
