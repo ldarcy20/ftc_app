@@ -283,7 +283,7 @@ public class AutonomousOfficial extends LinearOpMode {
             telemetry.update();
             moveBaseAndArm(.6,0,.4,.2,-.3,30,0,2700,500,-1000,telemetry);
             moveArmToPos(-1200,2700,-1000,-.4,.1,.1);
-            moveBaseAndArm(-.5,0,0.7,0.7,0.5,-14,0,300,0,0,telemetry);
+            moveBaseAndArm(-.5,0,0.7,0.5,0.5,-14,0,300,0,0,telemetry);
             moveBaseAndArm(0,.8,.1,.1,.1,0,14,0,0,0,telemetry);
             leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
@@ -298,8 +298,13 @@ public class AutonomousOfficial extends LinearOpMode {
                 leftMotor.setPower(scaleSpeed2(.8,.2,-135, Double.parseDouble(angleDouble)));
                 rightMotor.setPower(scaleSpeed2(-.8,-.2,-135, Double.parseDouble(angleDouble)));
             }
-            moveBaseAndArm(.7,0,.7,.7,-.7,-15,0,2963,-1100,-3100,telemetry);
-
+            moveBaseAndArm(.7,0,.7,.7,-.5,-15,0,2963,-700,-3100,telemetry);
+            leftMotor.setMode(RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(RUN_WITHOUT_ENCODER);
+            while(opModeIsActive()){
+                leftMotor.setPower(-.2);
+                rightMotor.setPower(-.2);
+            }
             telemetry.update();
 
         }
@@ -309,8 +314,10 @@ public class AutonomousOfficial extends LinearOpMode {
             moveArmToPos(550,3300,0,.7,.7,.6);
             moveArmToPos(-1300,3300,0,-.7,.1,.1);
             moveArmToPos(0, 300, 0, .7, .7, -.1);
-            moveBaseAndArm(-.7,.8,0.1,0.1,0.1,-20,14,0,0,0,telemetry);
-            moveBaseAndArm(0,.8,.1,.1,.1,0,16,0,0,0,telemetry);
+            middleMotor2.setTargetPositionTolerance(20);
+            middleMotor.setTargetPositionTolerance(20);
+            moveBaseAndArm(-.7,.8,0.1,0.1,0.1,-19,14,0,0,0,telemetry);
+            moveBaseAndArm(0.1,.8,.1,.1,.1,0,16,0,0,0,telemetry);
             leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
             angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
@@ -324,8 +331,13 @@ public class AutonomousOfficial extends LinearOpMode {
                 leftMotor.setPower(scaleSpeed2(.8,.2,-135, Double.parseDouble(angleDouble)));
                 rightMotor.setPower(scaleSpeed2(-.8,-.2,-135, Double.parseDouble(angleDouble)));
             }
-            moveBaseAndArm(.7,0,.7,.7,-.7,-12,0,2963,-1294,-3100,telemetry);
-
+            moveBaseAndArm(.7,0,.7,.7,-.5,-12,0,2963,-700,-3100,telemetry);
+            leftMotor.setMode(RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(RUN_WITHOUT_ENCODER);
+            while(opModeIsActive()){
+                leftMotor.setPower(-.2);
+                rightMotor.setPower(-.2);
+            }
             telemetry.update();
         }
         else {

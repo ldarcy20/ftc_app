@@ -297,7 +297,7 @@ public class ColorAutonomousClose extends LinearOpMode {
             telemetry.addLine("Should be Left");
             //encoderDriveBoth(.6,.7,15,28,28,60);
             moveBaseAndArm(.6, .45, 0.1, .1, .4, 26, 10,0,350,0, telemetry);
-            moveArmToPos(-1143,2128,-1000,.4,.5,.3);
+            moveArmToPos(-1143,2400,-1400,.4,.5,.3);
 
             /*//encoderDriveBoth(.5, .5, 27, 27, 27, 60);
             encoderDriveProfiledBoth(.1,.1,.5,.7,27,19,7,7,5,7,true);
@@ -328,8 +328,8 @@ public class ColorAutonomousClose extends LinearOpMode {
         else if(position == 2) {
             telemetry.addLine("Should be middle");
             telemetry.update();
-            moveBaseAndArm(.5,0,.4,.2,-.3,28,0,2650,500,-800,telemetry);
-            moveArmToPos(-1143,2128,-500,.4,.5,.3);
+            moveBaseAndArm(.5,0,.4,.2,-.3,24,0,2650,500,-800,telemetry);
+            moveArmToPos(-1143,2500,-800,.4,.5,.3);
 
             /*//encoderDrive(.5,45,45,60);
             encoderDriveProfiled(.1,.8,45,16,10,true);
@@ -352,7 +352,7 @@ public class ColorAutonomousClose extends LinearOpMode {
         else if(position == 3) {
             telemetry.addLine("Should be Right");
             moveBaseAndArm(.3,-.5,.1,.1,.7,26,-14,0,350,0,telemetry);
-            moveArmToPos(-1143,2128,-500,.4,.5,.3);
+            moveArmToPos(-1143,2400,-500,.4,.5,.3);
             //encoderDriveBoth(.4,-.5,-14,33,33,60);
             //moveBaseAndArm(.4,-.5,.4,.3,.2,33,-14,3000,550,-500,telemetry);
             //encoderDriveProfiledBoth(.1,-.1,.6,-.6,33,-30,10,-10,7,-5,true);
