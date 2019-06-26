@@ -41,7 +41,7 @@ public class ExcessStuff {
     }
 
     static public double shoulderAngle(double currentPos) {
-        double finalPos =  152 - (currentPos/((4318-1758)/90));
+        double finalPos =  155 - (currentPos/((4318-1758)/90));
         return finalPos;
     }
     static public double scaleSpeed (double maxSpeed, double minSpeed, double targetPos, double currentPos){
