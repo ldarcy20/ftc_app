@@ -75,6 +75,9 @@ public class AutonomousOfficial extends LinearOpMode {
             (WHEEL_DIAMETER_INCHES * 3.1415)*/ 91.125;
     static final double COUNTS_PER_INCH_SIDE = 125;
     double initialAngle;
+    boolean firstTime = true;
+    double startPos;
+    boolean finished = true;
     DcMotorEx leftMotor;
     DcMotorEx rightMotor;
     DcMotorEx middleMotor;
@@ -244,52 +247,84 @@ public class AutonomousOfficial extends LinearOpMode {
         }
         if(position == 1) {
             telemetry.addLine("Should be Left");
-            moveBaseAndArm(.6, .45, 0.1, .1, .4, 33, 11,0,350,0, telemetry);
-            moveArmToPos(350,2850,-1200,.3,.6,.4);
-            moveArmToPos(-1300,2850,-1200,-.4,.1,.1);
-            moveArmToPos(0, 0, 0, .7, .4, -.1);
-            moveBaseAndArm(-.6, -.45, 0, 0, 0, -30, -10,0,0,0, telemetry);
+            moveBaseAndArm(.6, -.45, 0.1, .1, .4, 36, 9,0,350,0, telemetry);
+            moveArmToPos(550,2800,-1800,.7,.7,.6);
+            moveArmToPos(-1300,2800,-1800,-.7,.7,.1);
+            moveArmToPos(-1458, 2362, -1800, .7, .7, -.6);
+            moveArmToPos(0, 300, 0, .7, .7, -.3);
             leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
-            while(leftMotor.getCurrentPosition() <= 1000){
-                leftMotor.setPower(-.5);
-                rightMotor.setPower(.5);
+            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+            while(Double.parseDouble(angleDouble) > -132 && opModeIsActive()) {
+                telemetry.addData("angle", angleDouble);
+                telemetry.addData("power", scaleSpeed(.8, .2, -135, Double.parseDouble(angleDouble)));
+                telemetry.addData("in loop", 5);
+                telemetry.update();
+                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+                leftMotor.setPower(scaleSpeed2(.8, .2, -135, Double.parseDouble(angleDouble)));
+                rightMotor.setPower(scaleSpeed2(-.8, -.2, -135, Double.parseDouble(angleDouble)));
             }
-            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
+            moveBaseAndArm(.1,-.5,.7,.7,.1,0,-10,0,0,0,telemetry);
+            moveBaseAndArm(.5,-.1,.7,.7,-.5,-6,0,2963,-700,-3100,telemetry);
+            leftMotor.setMode(RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(RUN_WITHOUT_ENCODER);
+            while(opModeIsActive()){
+                leftMotor.setPower(-.2);
+                rightMotor.setPower(-.2);
+            }
+            telemetry.update();
 
 
         }
         else if(position == 2) {
             telemetry.addLine("Should be middle");
             telemetry.update();
-            moveBaseAndArm(.5,0,.4,.2,-.3,28,0,2650,500,-800,telemetry);
-            moveArmToPos(-1300,2700,-800,-.4,.1,.1);
-
-            moveBaseAndArm(-.4,.1,-.5,.4,-.1,19,0,150,30,-800,telemetry);
-            moveBaseAndArm(.1, -.2, 0, 0, 0, 5, 5, 0,0,0,telemetry);
-            moveBaseAndArm(-.5,0,0,0,0,-25,0,0,0,0,telemetry);
+            moveBaseAndArm(.6,0,.4,.2,-.3,30,0,2700,500,-1000,telemetry);
+            moveArmToPos(-1200,2700,-1000,-.4,.1,.1);
+            moveBaseAndArm(-.5,0,0.7,0.7,0.5,-14,0,300,0,0,telemetry);
+            moveBaseAndArm(0,.8,.1,.1,.1,0,14,0,0,0,telemetry);
             leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
-            while(leftMotor.getCurrentPosition() <= 1000){
-                leftMotor.setPower(-.5);
-                rightMotor.setPower(.5);
+            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+            while(Double.parseDouble(angleDouble) > -132 && opModeIsActive()){
+                telemetry.addData("angle", angleDouble);
+                telemetry.addData("power", scaleSpeed(.8,.2,-135, Double.parseDouble(angleDouble)));
+                telemetry.update();
+                angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+                leftMotor.setPower(scaleSpeed2(.8,.2,-135, Double.parseDouble(angleDouble)));
+                rightMotor.setPower(scaleSpeed2(-.8,-.2,-135, Double.parseDouble(angleDouble)));
             }
-            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
+            moveBaseAndArm(.7,0,.7,.7,-.7,-15,0,2963,-1100,-3100,telemetry);
+
+            telemetry.update();
+
         }
         else if(position == 3) {
             telemetry.addLine("Should be Right");
             moveBaseAndArm(.3,-.5,.1,.1,.7,36,-15.27,0,350,0,telemetry);
-            moveArmToPos(550,3000,0,.7,.7,.6);
-            moveArmToPos(-1300,2700,0,-.7,.1,.1);
-            moveArmToPos(0, 0, 0, .7, .4, -.1);
-            moveBaseAndArm(-.3,.3,0,0,0,-24,14,0,0,0,telemetry);
+            moveArmToPos(550,3300,0,.7,.7,.6);
+            moveArmToPos(-1300,3300,0,-.7,.1,.1);
+            moveArmToPos(0, 300, 0, .7, .7, -.1);
+            moveBaseAndArm(-.7,.8,0.1,0.1,0.1,-20,14,0,0,0,telemetry);
+            moveBaseAndArm(0,.8,.1,.1,.1,0,16,0,0,0,telemetry);
             leftMotor.setMode(RUN_USING_ENCODER);
             rightMotor.setMode(RUN_USING_ENCODER);
-            while(leftMotor.getCurrentPosition() <= 1000){
-                leftMotor.setPower(-.5);
-                rightMotor.setPower(.5);
+            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+            while(Double.parseDouble(angleDouble) > -132 && opModeIsActive()){
+                telemetry.addData("angle", angleDouble);
+                telemetry.addData("power", scaleSpeed(.8,.2,-135, Double.parseDouble(angleDouble)));
+                telemetry.update();
+                angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+                leftMotor.setPower(scaleSpeed2(.8,.2,-135, Double.parseDouble(angleDouble)));
+                rightMotor.setPower(scaleSpeed2(-.8,-.2,-135, Double.parseDouble(angleDouble)));
             }
-            moveBaseAndArm(.4,.1,0,0,0,44,4,0,0,0,telemetry);
+            moveBaseAndArm(.7,0,.7,.7,-.7,-12,0,2963,-1294,-3100,telemetry);
 
             telemetry.update();
         }
@@ -356,7 +391,7 @@ public class AutonomousOfficial extends LinearOpMode {
         int runThroughs = 0;
         boolean atHere = false;
         double sideChange = 0;
-        while(leftMotor.isBusy() || rightMotor.isBusy() || middleMotor.isBusy() || middleMotor2.isBusy() || shoulderMotor.isBusy() || elbowMotor.isBusy() || rotationMotor.isBusy()) {
+        while((leftMotor.isBusy() || rightMotor.isBusy() || middleMotor.isBusy() || middleMotor2.isBusy() || shoulderMotor.isBusy() || elbowMotor.isBusy() || rotationMotor.isBusy())&&opModeIsActive()) {
             telemetry.addData("Left Position : Goal", leftMotor.getCurrentPosition() + ":" + sideTicks);
             telemetry.addData("Right Position : Goal", rightMotor.getCurrentPosition() + ":" + sideTicks);
             telemetry.addData("Middle Position : Goal", middleMotor.getCurrentPosition() + ":" + midTicks);
@@ -368,6 +403,12 @@ public class AutonomousOfficial extends LinearOpMode {
             telemetry.addData("At Here", sideChange);
             telemetry.addData("Left Power", leftMotor.getPower());
             telemetry.addData("Right Power", rightMotor.getPower());
+            telemetry.addData("Is Busy Left", leftMotor.isBusy());
+            telemetry.addData("Is Busy Mid ", middleMotor.isBusy());
+            telemetry.addData("Is Busy Mid 2", middleMotor2.isBusy());
+            telemetry.addData("Is Busy Elbow ", elbowMotor.isBusy());
+            telemetry.addData("Is Busy Shoulder", shoulderMotor.isBusy());
+            telemetry.addData("Is Busy Rotation", rotationMotor.isBusy());
             angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
             angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
             if(runThroughs > 2) {
@@ -436,11 +477,11 @@ public class AutonomousOfficial extends LinearOpMode {
         hangArm.setPower(0);
         hangArmLock.setPosition(.35);
         //hangArm.setPower(0);
-        Thread.sleep(1000);
+        Thread.sleep(500);
         hangArm.setPower(0);
 
         //hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        while(hangArm.getCurrentPosition() > -5130){
+        while(hangArm.getCurrentPosition() > -5130 && opModeIsActive()){
             telemetry.addData("Hang Arm Pos", hangArm.getCurrentPosition());
             telemetry.update();
         }
@@ -452,11 +493,11 @@ public class AutonomousOfficial extends LinearOpMode {
         //
         middleMotor.setTargetPosition(400);
         middleMotor2.setTargetPosition(400);
-        rotationMotor.setTargetPosition(-950);
+        rotationMotor.setTargetPosition(-2000);
         middleMotor.setPower(.6);
         middleMotor2.setPower(.6);
         rotationMotor.setPower(-.7);
-        while(middleMotor.isBusy() || middleMotor2.isBusy() || rotationMotor.isBusy()) {
+        while((middleMotor.isBusy() || middleMotor2.isBusy() || rotationMotor.isBusy()) && opModeIsActive()) {
             telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
             telemetry.addData("Rotation Motor", rotationMotor.getCurrentPosition());
             telemetry.update();
@@ -475,7 +516,7 @@ public class AutonomousOfficial extends LinearOpMode {
         angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
         double currentAngle = Double.parseDouble(angleDouble);
         double sidePower = ((currentAngle - initialAngle) * 20)/100;
-        while(Double.parseDouble(angleDouble) > (initialAngle + 1) || Double.parseDouble(angleDouble) < (initialAngle - 1)) {
+        while((Double.parseDouble(angleDouble) > (initialAngle + 1) || Double.parseDouble(angleDouble) < (initialAngle - 1)) && opModeIsActive()) {
             telemetry.addData("Current Angle", angleDouble);
             telemetry.update();
             angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
@@ -503,7 +544,7 @@ public class AutonomousOfficial extends LinearOpMode {
         elbowMotor.setPower(elbowPower);
         shoulderMotor.setPower(shoulderPower);
         rotationMotor.setPower(rotationPower);
-        while(elbowMotor.isBusy() || shoulderMotor.isBusy() || rotationMotor.isBusy()) {
+        while((elbowMotor.isBusy() || shoulderMotor.isBusy() || rotationMotor.isBusy()) && opModeIsActive()) {
             telemetry.addData("Shoulder Position : Goal", shoulderMotor.getCurrentPosition() + ":" + shoulderPos);
             telemetry.addData("Elbow Position : Goal", elbowMotor.getCurrentPosition() + ":" + elbowPos);
             telemetry.addData("Rotation Position : Goal", rotationMotor.getCurrentPosition() + ":" + rotationPos);
@@ -554,6 +595,39 @@ public class AutonomousOfficial extends LinearOpMode {
         DecimalFormat twoDForm = new DecimalFormat("0.########");
         String str = twoDForm.format(x);
         return Double.valueOf(str);
+    }
+    public double scaleSpeed (double maxSpeed, double minSpeed, double targetPos, double currentPos){
+        if (firstTime){
+            startPos = currentPos;
+            firstTime = false;
+            finished = false;
+        }
+        double speedDif = maxSpeed - minSpeed;
+        double dis = targetPos - startPos;
+        double midPt = startPos + dis/2;
+        if(Math.abs(currentPos) >= Math.abs(startPos) && Math.abs(currentPos) <= Math.abs(midPt)){
+            return minSpeed + ((currentPos- startPos)/(dis/2))*(speedDif);
+        }
+        else if (Math.abs(currentPos) <= Math.abs(targetPos) && Math.abs(currentPos) > Math.abs(midPt)){
+            return minSpeed + ((targetPos - currentPos)/(dis/2))*(speedDif);
+        }
+        if (Math.abs(currentPos) >= Math.abs(targetPos)){
+            firstTime = true;
+            finished = true;
+        }
+        return 0;
+    }
+    public double scaleSpeed2 (double maxSpeed, double minSpeed, double targetPos, double currentPos){
+        if (firstTime){
+            startPos = currentPos;
+            firstTime = false;
+            finished = false;
+        }
+      //  if(Math.abs(currentPos - startPos) <= Math.abs(targetPos - startPos)) {
+            double scale = 1 - (Math.abs(currentPos-startPos)) / (Math.abs(targetPos-startPos));
+            return scale * (maxSpeed - minSpeed) + minSpeed;
+      //  }
+     //   return 0;
     }
 
 }
