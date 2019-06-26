@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -14,6 +15,7 @@ public class SpeedMode extends OpMode {
     DcMotorEx rightMotor;
     DcMotorEx middleMotor;
     DcMotorEx middleMotor2;
+    DcMotorEx rotationMotor;
     PIDFCoefficients pidStuff;
 
     @Override
@@ -22,7 +24,7 @@ public class SpeedMode extends OpMode {
         rightMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "rightMotor");
         middleMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "middleMotor");
         middleMotor2 = (DcMotorEx) hardwareMap.get(DcMotor.class, "middleMotor2");
-
+        rotationMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "Rotation Motor");
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
         middleMotor.setDirection(DcMotor.Direction.REVERSE);
         middleMotor2.setDirection(DcMotor.Direction.REVERSE);
@@ -42,11 +44,15 @@ public class SpeedMode extends OpMode {
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rotationMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        rotationMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -61,6 +67,8 @@ public class SpeedMode extends OpMode {
             leftMotor.setPower(gamepad1.right_stick_x);
             rightMotor.setPower(-gamepad1.right_stick_x);
         }
+        rotationMotor.setPower(gamepad2.right_stick_x);
+        telemetry.addData("Rotation Pos", rotationMotor.getCurrentPosition());
         telemetry.addData("left power", leftMotor.getPower());
         telemetry.update();
     }
