@@ -986,7 +986,7 @@ public class ColorAutonomousClose extends LinearOpMode {
             while (opModeIsActive() &&
                     ((Math.abs(middleMotor.getCurrentPosition())) < Math.abs(roundDouble(Math.sin(Math.toRadians(angle))) * COUNTS_PER_INCH_SIDE * inches) || Math.abs(leftMotor.getCurrentPosition()) < (Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches)) || Math.abs(rightMotor.getCurrentPosition()) < Math.abs(roundDouble(Math.cos(Math.toRadians(angle))) * COUNTS_PER_INCH * inches))) {
 
-                // Display it for the driver.
+                // Display  it for the driver.
                 telemetry.addData("Left Path", newLeftTarget);
                 telemetry.addData("Middle Path", newMiddleTarget);
                 telemetry.addData("Current Left", leftMotor.getCurrentPosition());
