@@ -1150,36 +1150,30 @@ public class ColorAutonomousClose extends LinearOpMode {
     }
     public void releaseArm() throws InterruptedException {
         hangArm.setMode(RUN_WITHOUT_ENCODER);
-        hangArm.setPower(.7);
-        Thread.sleep(100);
-        //hangArm.setPower(0);
-
+        hangArm.setPower(0);
         hangArmLock.setPosition(.35);
-        Thread.sleep(350);
+        //hangArm.setPower(0);
+        Thread.sleep(500);
         hangArm.setPower(0);
 
         //hangArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hangArm.setMode(RUN_TO_POSITION);
-        hangArm.setTargetPosition(-5600);
-        hangArm.setPower(-.7);
-        while(hangArm.isBusy()) {
-            telemetry.addData("Pos", hangArm.getCurrentPosition());
+        while(hangArm.getCurrentPosition() > -5130 && opModeIsActive()){
+            telemetry.addData("Hang Arm Pos", hangArm.getCurrentPosition());
             telemetry.update();
         }
+        hangArm.setMode(RUN_USING_ENCODER);
         hangArm.setPower(0);
-
-
         middleMotor.setMode(RUN_TO_POSITION);
         middleMotor2.setMode(RUN_TO_POSITION);
         rotationMotor.setMode(RUN_TO_POSITION);
         //
         middleMotor.setTargetPosition(400);
         middleMotor2.setTargetPosition(400);
-        rotationMotor.setTargetPosition(-1600);
+        rotationMotor.setTargetPosition(-2000);
         middleMotor.setPower(.6);
         middleMotor2.setPower(.6);
         rotationMotor.setPower(-.7);
-        while(middleMotor.isBusy() || middleMotor2.isBusy() || rotationMotor.isBusy()) {
+        while((middleMotor.isBusy() || middleMotor2.isBusy() || rotationMotor.isBusy()) && opModeIsActive()) {
             telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
             telemetry.addData("Rotation Motor", rotationMotor.getCurrentPosition());
             telemetry.update();
