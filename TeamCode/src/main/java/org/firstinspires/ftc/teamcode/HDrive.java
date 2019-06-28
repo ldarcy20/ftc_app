@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -24,6 +25,7 @@ import java.util.Locale;
 // hirsh is cool
   // * Created by definitly not HIRSH as he would mess it up and it would explode on 8/18/2016.
 @TeleOp(name= "BiggerBort")
+@Disabled()
 public class HDrive extends OpMode {
     double[] rollAngle = new double[2], pitchAngle = new double[2], yawAngle = new double[2];
     Orientation angles;

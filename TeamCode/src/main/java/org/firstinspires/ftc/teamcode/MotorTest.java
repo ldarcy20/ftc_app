@@ -51,6 +51,7 @@ import java.util.Locale;
  * Created by Luke on 9/25/2016.
  */
 @Autonomous(name= "Test Motor Auto ", group = "HDrive")
+@Disabled()
 public class MotorTest extends LinearOpMode {
     VuforiaLocalizer vuforia;
     BNO055IMU imu;

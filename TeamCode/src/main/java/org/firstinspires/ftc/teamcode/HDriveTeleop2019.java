@@ -4,6 +4,7 @@ import android.view.animation.RotateAnimation;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -29,6 +30,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 // * Created by definitly not HIRSH as he would mess it up and it would explode on 8/18/2016
 
 @TeleOp(name = "Rover Ruckus TeleOp")
+@Disabled()
 public class HDriveTeleop2019 extends OpMode {
     //HDrive2 calculator
     HDriveFCCalc calculator;

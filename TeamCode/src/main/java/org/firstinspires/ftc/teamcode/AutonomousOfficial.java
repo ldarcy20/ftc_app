@@ -60,7 +60,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODE
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
 /**
- * Created by Luke on 9/25/2016.
+ * Created by Luke on 9/25/2016. Final Far Auto
  */
 @Autonomous(name= "Color Official Auto", group = "HDrive")
 public class AutonomousOfficial extends LinearOpMode {

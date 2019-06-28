@@ -25,6 +25,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * is explained below.
  */
 @Autonomous(name = "Tensor Flow Autonomous", group = "Concept")
+@Disabled()
 public class TensorFlowAuto extends LinearOpMode {
     static final double     COUNTS_PER_MOTOR_REV    = 1150 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP

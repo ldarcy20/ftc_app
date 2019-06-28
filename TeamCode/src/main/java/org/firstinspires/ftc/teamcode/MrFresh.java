@@ -81,6 +81,7 @@ public class MrFresh extends OpMode {
     boolean updatedDpadMovement = false;
     boolean buttonAToggle = false;
     boolean buttonAWasPressed = false;
+    boolean reachedGoal = false;
     int heldElbowPos = 0;
     int heldShoulderPos = 0;
     int hangerState = 0;
@@ -182,7 +183,7 @@ public class MrFresh extends OpMode {
         angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
         here++;
         armCalculator.calculateSpeed(gamepad2.left_stick_x, gamepad2.right_stick_y, shoulderMotor, elbowMotor, ExcessStuff.shoulderAngle((double) shoulderMotor.getCurrentPosition()), ExcessStuff.elbowAngle((double) elbowMotor.getCurrentPosition()), telemetry);
-        telemetry.addData("Angle", angleDouble);
+        /*telemetry.addData("Angle", angleDouble);
         telemetry.addData("Left Pos",leftMotor.getCurrentPosition());
         telemetry.addData("Right Pos", rightMotor.getCurrentPosition());
         telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
@@ -205,7 +206,7 @@ public class MrFresh extends OpMode {
         telemetry.addData("Rotation Pos", rotationPos);
         telemetry.addData("Rotation Mode", rotationMotor.getMode());
         telemetry.addData("Button A", buttonAToggle);
-        telemetry.update();
+        telemetry.update();*/
 
         dpadCheck();
         checkArmMovement();
@@ -764,6 +765,7 @@ public class MrFresh extends OpMode {
                 landerState = 3;
                 dpadWasPressed = false;
                 firstTimeGeneral = true;
+                reachedGoal = false;
             }
         }
         if(landerState == 3) {
@@ -786,6 +788,12 @@ public class MrFresh extends OpMode {
                     middleMotor.setPower(0);
                     firstTimeGeneral = false;
                 }
+                reachedGoal = true;
+            }
+            if((!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_left && !gamepad1.dpad_right) && reachedGoal) {
+                powerMultiplier = 2 * ((startingAngle - Double.parseDouble(angleDouble)) / 90);
+                leftMotor.setPower(-powerMultiplier);
+                rightMotor.setPower(powerMultiplier);
             }
             if(gamepad2.right_bumper) {
                 landerState = 4;

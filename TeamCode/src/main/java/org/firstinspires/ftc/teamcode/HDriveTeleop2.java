@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,6 +22,7 @@ import java.util.Locale;
 // * Created by definitly not HIRSH as he would mess it up and it would explode on 8/18/2016
 
 @TeleOp(name= "HDriveTeleop2")
+@Disabled()
 public class HDriveTeleop2 extends OpMode {
     //HDrive2 calculator
     HDriveFCCalc calculator;

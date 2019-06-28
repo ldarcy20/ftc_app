@@ -63,6 +63,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENC
  * Created by Luke on 9/25/2016.
  */
 @Autonomous(name= "Color Far Auto ", group = "HDrive")
+@Disabled()
 public class AutonomousWithVision extends LinearOpMode {
     AutoClasses extraClasses;
     VuforiaLocalizer vuforia;
