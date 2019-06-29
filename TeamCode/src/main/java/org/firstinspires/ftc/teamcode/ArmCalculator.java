@@ -31,9 +31,9 @@ public class ArmCalculator {
             moveUp = moveUp*(1/Math.abs(moveAcross));
             moveAcross = moveAcross*(1/Math.abs(moveAcross));
         }
-        telemetry.addData("currentY", currentY);
+        /*telemetry.addData("currentY", currentY);
         telemetry.addData("targetY", targetY);
-        telemetry.addData("moveUp", moveUp);
+        telemetry.addData("moveUp", moveUp);*/
         elbowMotorSpeed = moveUp;
         shoulderMotorSpeed = moveAcross;
     }

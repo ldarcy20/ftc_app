@@ -32,7 +32,7 @@ public class MrFresh extends OpMode {
     int landerState = 0;
     int hangArmLockCounter = 0;
     int priorRotationPos = 2982;
-    int priorElbowPos = -1363;
+    int priorElbowPos = -1113;
     int priorShoulderPos = 3400;
     int here = 0;
     int sideAdjusted = 422422;
@@ -245,7 +245,7 @@ public class MrFresh extends OpMode {
             elbowMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             shoulderMotor.setTargetPosition(50);
-            elbowMotor.setTargetPosition(50);
+            elbowMotor.setTargetPosition(300);
             rotationMotor.setTargetPosition(-25);
             shoulderMotor.setPower(.5);
             elbowMotor.setPower(0.5);
@@ -261,7 +261,7 @@ public class MrFresh extends OpMode {
             shoulderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             elbowMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             shoulderMotor.setTargetPosition(3982);
-            elbowMotor.setTargetPosition(-368);
+            elbowMotor.setTargetPosition(-118);
             shoulderMotor.setPower(.7);
             elbowMotor.setPower(0.7);
             /*telemetry.addData("elbow pos", elbowMotor.getCurrentPosition());
@@ -724,14 +724,14 @@ public class MrFresh extends OpMode {
             elbowMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rotationMotor.setTargetPosition(1400);
             shoulderMotor.setTargetPosition(1754);
-            elbowMotor.setTargetPosition(1482);
+            elbowMotor.setTargetPosition(1732);
             shoulderMotor.setPower(.8);
             elbowMotor.setPower(.8);
             nowTurning = false;
             landerState = 1;
         }
         if(landerState == 1) {
-            if(ExcessStuff.closeEnough(shoulderMotor.getCurrentPosition(),1754,25) && ExcessStuff.closeEnough(elbowMotor.getCurrentPosition(),1482,25)) {
+            if(ExcessStuff.closeEnough(shoulderMotor.getCurrentPosition(),1754,25) && ExcessStuff.closeEnough(elbowMotor.getCurrentPosition(),1732,25)) {
                 landerState = 2;
                 rotationMotor.setPower(.7);
             }
@@ -821,7 +821,7 @@ public class MrFresh extends OpMode {
             elbowMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             shoulderMotor.setTargetPosition(1280);
-            elbowMotor.setTargetPosition(1478);
+            elbowMotor.setTargetPosition(1728);
             rotationMotor.setTargetPosition(1500);
             landerState = 5;
             firstTimeGeneral = true;
