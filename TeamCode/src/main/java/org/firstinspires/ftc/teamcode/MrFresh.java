@@ -52,6 +52,8 @@ public class MrFresh extends OpMode {
     double craterState = 0;
     double powerMultiplier = 0;
     double rotationPos = 0;
+    double leftTime = System.currentTimeMillis();
+    double rightTime = System.currentTimeMillis();
 
     boolean firstTimeStopedLander = true;
     boolean fieldCentric = true;
@@ -74,7 +76,6 @@ public class MrFresh extends OpMode {
     boolean ballInLeft = false;
     boolean ballInRight = false;
     boolean bumperPressedLander = false;
-    boolean firstAutoButton = true;
     boolean firstTimeNotSeeingB = true;
     boolean dpadWasPressed = false;
     boolean firstTimeGeneral = true;
@@ -82,6 +83,10 @@ public class MrFresh extends OpMode {
     boolean buttonAToggle = false;
     boolean buttonAWasPressed = false;
     boolean reachedGoal = false;
+    boolean leftIntakeWasUsed = false;
+    boolean rightIntakeWasUsed = false;
+    boolean leftIntakeFirst = true;
+    boolean rightIntakeFirst = true;
     int heldElbowPos = 0;
     int heldShoulderPos = 0;
     int hangerState = 0;
@@ -136,7 +141,7 @@ public class MrFresh extends OpMode {
         calculator = new HDriveFCCalc();
         dpadCalculator = new HDriveFCCalc();
         armCalculator = new ArmCalculator(bicep, forearm);
-        excessStuff = new ExcessStuff(leftMotor,rightMotor,middleMotor,middleMotor2,elbowMotor,shoulderMotor,rotationMotor);
+        excessStuff = new ExcessStuff(leftMotor, rightMotor, middleMotor, middleMotor2, elbowMotor, shoulderMotor, rotationMotor);
         elbowMotor.setDirection(DcMotor.Direction.REVERSE);
         rotationMotor.setDirection(DcMotor.Direction.REVERSE);
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -178,12 +183,13 @@ public class MrFresh extends OpMode {
         rotationPos = rotationMotor.getCurrentPosition();
         timeDifferenceBetweenLoops = System.currentTimeMillis();
     }
+
     public void loop() {
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
         here++;
         armCalculator.calculateSpeed(gamepad2.left_stick_x, gamepad2.right_stick_y, shoulderMotor, elbowMotor, ExcessStuff.shoulderAngle((double) shoulderMotor.getCurrentPosition()), ExcessStuff.elbowAngle((double) elbowMotor.getCurrentPosition()), telemetry);
-        /*telemetry.addData("Angle", angleDouble);
+        telemetry.addData("Angle", angleDouble);
         telemetry.addData("Left Pos",leftMotor.getCurrentPosition());
         telemetry.addData("Right Pos", rightMotor.getCurrentPosition());
         telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
@@ -206,7 +212,9 @@ public class MrFresh extends OpMode {
         telemetry.addData("Rotation Pos", rotationPos);
         telemetry.addData("Rotation Mode", rotationMotor.getMode());
         telemetry.addData("Button A", buttonAToggle);
-        telemetry.update();*/
+        //telemetry.addData("left intake", leftIntakeWasUsed);
+        //telemetry.addData("Thing",((System.currentTimeMillis() - leftTime)));
+        telemetry.update();
 
         dpadCheck();
         checkArmMovement();
@@ -235,6 +243,7 @@ public class MrFresh extends OpMode {
         armMoved = false;
         sideMoved = false;
     }
+
     public void dpadCheck() {
         double sidePower = 0;
         double midPower = 0;
@@ -270,38 +279,33 @@ public class MrFresh extends OpMode {
             armMoved = true;
             isRunningArm = true;
         }
-        if(gamepad1.dpad_up) {
+        if (gamepad1.dpad_up) {
             dpadWasPressed = true;
             yJoystick = -.3;
-        }
-        else if(gamepad1.dpad_down) {
+        } else if (gamepad1.dpad_down) {
             dpadWasPressed = true;
             yJoystick = .3;
-        }
-        else  {
+        } else {
             yJoystick = 0;
         }
-        if(gamepad1.dpad_left) {
+        if (gamepad1.dpad_left) {
             dpadWasPressed = true;
             xJoystick = -.3;
-        }
-        else if(gamepad1.dpad_right) {
+        } else if (gamepad1.dpad_right) {
             dpadWasPressed = true;
             xJoystick = .3;
-        }
-        else {
+        } else {
             xJoystick = 0;
 
         }
-        if(gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
+        if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             updatedDpadMovement = true;
             dpadCalculator.calculateMovement(xJoystick, yJoystick, 0, Double.parseDouble(angleDouble) + offset);
             middleMotor.setPower(dpadCalculator.getMiddleDrive());
             middleMotor2.setPower(dpadCalculator.getMiddleDrive());
             leftMotor.setPower(dpadCalculator.getLeftDrive());
             rightMotor.setPower(dpadCalculator.getRightDrive());
-        }
-        else if((leftMotor.getPower() != 0 || rightMotor.getPower() != 0 || middleMotor.getPower() != 0) && updatedDpadMovement) {
+        } else if ((leftMotor.getPower() != 0 || rightMotor.getPower() != 0 || middleMotor.getPower() != 0) && updatedDpadMovement) {
             leftMotor.setPower(0);
             rightMotor.setPower(0);
             middleMotor.setPower(0);
@@ -324,16 +328,13 @@ public class MrFresh extends OpMode {
                 zeroPowerBehavior = false;
                 armMoved = true;
                 releaseArm();
-                if(rotationMotor.getCurrentPosition() < 3307 && rotationMotor.getCurrentPosition() > 25) {
+                if (rotationMotor.getCurrentPosition() < 3307 && rotationMotor.getCurrentPosition() > 25) {
                     rotationMotor.setPower(.6);
-                }
-                else if(rotationMotor.getCurrentPosition() >= 3307 && (.5 * gamepad2.right_stick_x) < 0) {
+                } else if (rotationMotor.getCurrentPosition() >= 3307 && (.5 * gamepad2.right_stick_x) < 0) {
                     rotationMotor.setPower(.6);
-                }
-                else if(rotationMotor.getCurrentPosition() <= 25 && (.5 * gamepad2.right_stick_x) > 0) {
+                } else if (rotationMotor.getCurrentPosition() <= 25 && (.5 * gamepad2.right_stick_x) > 0) {
                     rotationMotor.setPower(.6);
-                }
-                else {
+                } else {
                     rotationMotor.setPower(.3);
                 }
                 elbowMotor.setPower(.5 * -gamepad2.left_stick_y);
@@ -360,16 +361,13 @@ public class MrFresh extends OpMode {
                 armMoved = true;
             } else if ((gamepad2.left_stick_x != 0 || gamepad2.left_stick_y != 0 || gamepad2.right_stick_x != 0) && !buttonAToggle) {
                 releaseArm();
-                if(rotationMotor.getCurrentPosition() < 3307 && rotationMotor.getCurrentPosition() > 25) {
+                if (rotationMotor.getCurrentPosition() < 3307 && rotationMotor.getCurrentPosition() > 25) {
                     rotationMotor.setPower(.6);
-                }
-                else if(rotationMotor.getCurrentPosition() >= 3307 && (gamepad2.right_stick_x) < 0) {
+                } else if (rotationMotor.getCurrentPosition() >= 3307 && (gamepad2.right_stick_x) < 0) {
                     rotationMotor.setPower(.6);
-                }
-                else if(rotationMotor.getCurrentPosition() <= 25 && (.5 * gamepad2.right_stick_x) > 0) {
+                } else if (rotationMotor.getCurrentPosition() <= 25 && (.5 * gamepad2.right_stick_x) > 0) {
                     rotationMotor.setPower(.6);
-                }
-                else {
+                } else {
                     rotationMotor.setPower(0);
                 }
                 elbowMotor.setPower(.4 * armCalculator.getElbowMotorSpeed());
@@ -378,35 +376,36 @@ public class MrFresh extends OpMode {
                 armMoved = true;
             }
         }
-        if(gamepad2.dpad_right) {
+        if (gamepad2.dpad_right) {
             armCalculator.setTargetY(0);
             armMoved = true;
         }
         timeDifferenceBetweenLoops = System.currentTimeMillis() - timeDifferenceBetweenLoops;
-        if(gamepad2.right_stick_x != 0) {
-            if(!ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(),rotationPos,10)) {
+        if (gamepad2.right_stick_x != 0) {
+            if (!ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(), rotationPos, 10)) {
                 rotationPos = rotationMotor.getCurrentPosition();
             }
             rotationPos = rotationPos + (5 * gamepad2.right_stick_x * timeDifferenceBetweenLoops);
-            rotationMotor.setTargetPosition((int)rotationPos);
+            rotationMotor.setTargetPosition((int) rotationPos);
         }
         timeDifferenceBetweenLoops = System.currentTimeMillis();
-        if(gamepad2.y) {
-            if(!elbowMotor.getMode().equals(DcMotor.RunMode.RUN_WITHOUT_ENCODER)) {
+        if (gamepad2.y) {
+            if (!elbowMotor.getMode().equals(DcMotor.RunMode.RUN_WITHOUT_ENCODER)) {
                 elbowMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
             armMoved = true;
             elbowMotor.setPower(-.1);
 
         }
-        if(rotationMotor.getCurrentPosition() != rotationPos && !buttonAToggle && !gamepad2.dpad_up && gamepad2.left_stick_x == 0 && gamepad2.left_stick_y == 0 && gamepad2.right_stick_x == 0) {
-            if(!ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(),rotationPos,50)) {
+        if (rotationMotor.getCurrentPosition() != rotationPos && !buttonAToggle && !gamepad2.dpad_up && gamepad2.left_stick_x == 0 && gamepad2.left_stick_y == 0 && gamepad2.right_stick_x == 0) {
+            if (!ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(), rotationPos, 50)) {
                 rotationPos = rotationMotor.getCurrentPosition();
             }
-            rotationMotor.setTargetPosition((int)rotationPos);
+            rotationMotor.setTargetPosition((int) rotationPos);
             rotationMotor.setPower(.1);
         }
     }
+
     public void checkFieldCentricAndSlowMode() {
         if (gamepad2.x && isPressedX) {
             isPressedX = false;
@@ -420,31 +419,63 @@ public class MrFresh extends OpMode {
         }
 
     }
+
     public void checkIntake() {
-        if(!buttonAToggle) {
+        if (!buttonAToggle) {
             if (gamepad2.left_trigger == 1) {
                 leftIntake.setPosition(.05); //collects
             } else {
-                if(gamepad2.left_bumper) {
+                if (gamepad2.left_bumper) {
                     leftIntake.setPosition(0.5 + (1 / 2.3)); //scores
-                }
-                else {
-                    leftIntake.setPosition(0.5 + (0 / 2.3)); //scores
+                    leftIntakeWasUsed = true;
+                    leftIntakeFirst = true;
+                } else {
+                    if (!leftIntakeWasUsed) {
+                        leftIntake.setPosition(0.5 + (0 / 2.3)); //scores
+                    }
                 }
             }
             if (gamepad2.right_trigger == 1) {
                 rightIntake.setPosition(.05); //collects
             } else {
-                if(gamepad2.right_bumper) {
+                if (gamepad2.right_bumper) {
                     rightIntake.setPosition(0.5 + (1 / 2.3));//score
+                    rightIntakeWasUsed = true;
+                    rightIntakeFirst = true;
+                } else {
+                    if (!rightIntakeWasUsed) {
+                        rightIntake.setPosition(0.5 + (0 / 2.3));//scores
+                    }
                 }
-                else {
-                    rightIntake.setPosition(0.5 + (0 / 2.3));//scores
-                }
+            }
+        }
+        if (leftIntakeWasUsed && !gamepad2.left_bumper) {
+            if (leftIntakeFirst) {
+                leftTime = System.currentTimeMillis();
+                leftIntakeFirst = false;
+            }
+            if (((System.currentTimeMillis() - leftTime) < 1000)) {
+                leftIntake.setPosition(.6);
+            } else {
+                leftIntakeWasUsed = false;
+                leftIntakeFirst = true;
+            }
 
+        }
+        if (rightIntakeWasUsed && !gamepad2.right_bumper) {
+            if (rightIntakeFirst) {
+                rightTime = System.currentTimeMillis();
+                rightIntakeFirst = false;
+            }
+            if ((System.currentTimeMillis() - rightTime) < 1000) {
+                rightIntake.setPosition(.6);
+            } else {
+                rightIntakeFirst = true;
+                rightIntakeWasUsed = false;
             }
         }
     }
+
     public void gettingOnTheLander() {
         if (gamepad1.left_bumper) {
             getOnLander();
@@ -493,6 +524,7 @@ public class MrFresh extends OpMode {
             firstTimeStopedLander = true;
         }
     }
+
     public void moveTheBase() {
         if (isGettingOnLander == false && !gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.dpad_down && !gamepad1.dpad_up && !isMovingTowardsLander && !buttonAToggle) {
             if (yPressed == false) {
@@ -542,8 +574,9 @@ public class MrFresh extends OpMode {
             middleMotor2.setPower(speed * calculator.getMiddleDrive());
         }
     }
-    public void holdArmPosition(){
-        if(!heldPositionLast){
+
+    public void holdArmPosition() {
+        if (!heldPositionLast) {
             heldElbowPos = elbowMotor.getCurrentPosition();
             heldShoulderPos = shoulderMotor.getCurrentPosition();
             heldPositionLast = true;
@@ -557,56 +590,59 @@ public class MrFresh extends OpMode {
         shoulderMotor.setTargetPosition(heldShoulderPos);
 
     }
-    public void releaseArm(){
-        if(shoulderMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || elbowMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || rotationMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION); {
+
+    public void releaseArm() {
+        if (shoulderMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || elbowMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION || rotationMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION)
+            ;
+        {
             shoulderMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
+
     public void goToLander() {
-        if(firstTimeMovingLander) {
+        if (firstTimeMovingLander) {
             leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             middleMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftMotor.setTargetPosition(0 + (int)offsetSide); //-2000
-            rightMotor.setTargetPosition(0 + (int)offsetSide);//-2000
-            middleMotor.setTargetPosition(0 + (int)offsetMid);//-4000
-            middleMotor2.setTargetPosition(0 + (int)offsetMid);//-4000
+            leftMotor.setTargetPosition(0 + (int) offsetSide); //-2000
+            rightMotor.setTargetPosition(0 + (int) offsetSide);//-2000
+            middleMotor.setTargetPosition(0 + (int) offsetMid);//-4000
+            middleMotor2.setTargetPosition(0 + (int) offsetMid);//-4000
             leftMotor.setPower(.4);
             rightMotor.setPower(.4);
             middleMotor.setPower(.9);
             middleMotor2.setPower(.9);
             firstTimeMovingLander = false;
-            angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
             angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
-            if(leftMotor.getCurrentPosition() > 0 + (int)offsetSide) {
+            if (leftMotor.getCurrentPosition() > 0 + (int) offsetSide) {
                 sidePower = -.4;
-            }
-            else if(leftMotor.getCurrentPosition() < 0 + (int)offsetSide) {
+            } else if (leftMotor.getCurrentPosition() < 0 + (int) offsetSide) {
                 sidePower = .4;
             }
         }
-        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
         endingAngle = Double.parseDouble(angleDouble);
         angleError = endingAngle - startingAngle;
-        sideChange = (angleError)/100;
-        if(leftMotor.isBusy() && rightMotor.isBusy()) {
+        sideChange = (angleError) / 100;
+        if (leftMotor.isBusy() && rightMotor.isBusy()) {
             leftMotor.setPower(sidePower + sideChange);
             rightMotor.setPower(sidePower - sideChange);
         }
-        if(!rightMotor.isBusy() || !leftMotor.isBusy()) {
-            if(rightMotor.getMode() == RUN_TO_POSITION || leftMotor.getMode() == RUN_TO_POSITION) {
+        if (!rightMotor.isBusy() || !leftMotor.isBusy()) {
+            if (rightMotor.getMode() == RUN_TO_POSITION || leftMotor.getMode() == RUN_TO_POSITION) {
                 leftMotor.setMode(RUN_USING_ENCODER);
                 rightMotor.setMode(RUN_USING_ENCODER);
             }
             leftMotor.setPower(sideChange);
             rightMotor.setPower(-sideChange);
         }
-        if(!leftMotor.isBusy() && !rightMotor.isBusy() && !middleMotor.isBusy() && !middleMotor2.isBusy()){
-            if(firstTimeStopedLander) {
+        if (!leftMotor.isBusy() && !rightMotor.isBusy() && !middleMotor.isBusy() && !middleMotor2.isBusy()) {
+            if (firstTimeStopedLander) {
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
                 middleMotor.setPower(0);
@@ -620,6 +656,7 @@ public class MrFresh extends OpMode {
         }
         sideMoved = true;
     }
+
     public void getOnLander() {
         if (firstTimeLander) {
             hangerState = 0;
@@ -645,7 +682,7 @@ public class MrFresh extends OpMode {
             hangArm.setPower(-.5);
             hangerState = 3;
         } else if (hangerState == 3) {
-            if (ExcessStuff.closeEnough(hangArm.getCurrentPosition(),-1000,25)) {
+            if (ExcessStuff.closeEnough(hangArm.getCurrentPosition(), -1000, 25)) {
                 hangArm.setPower(.4);
                 hangArm.setTargetPosition(hangArm.getCurrentPosition());
                 hangArmLock.setPosition(.534);
@@ -669,21 +706,20 @@ public class MrFresh extends OpMode {
             hangArmLock.setPosition(.534);
         }
     }
+
     public void ScoringAndCollectingButtons() {
-        if(gamepad2.a) {
-            if(buttonAToggle == false && buttonAWasPressed == false) {
+        if (gamepad2.a) {
+            if (buttonAToggle == false && buttonAWasPressed == false) {
                 buttonAToggle = true;
-            }
-            else if(buttonAToggle == true && buttonAWasPressed == false) {
+            } else if (buttonAToggle == true && buttonAWasPressed == false) {
                 buttonAToggle = false;
             }
             buttonAWasPressed = true;
 
-        }
-        else {
+        } else {
             buttonAWasPressed = false;
         }
-        if(buttonAToggle) {
+        if (buttonAToggle) {
             scoreInLander();
         } else {
             craterState = 0;
@@ -694,9 +730,10 @@ public class MrFresh extends OpMode {
             bumperPressedLander = false;
         }
     }
+
     public void scoreInLander() {
         armMoved = true;
-        if(bumperPressedLander && !gamepad2.right_bumper) {
+        if (bumperPressedLander && !gamepad2.right_bumper) {
             bumperPressedLander = false;
         }
         if (landerState == 0) {//1550 middle motor change
@@ -730,14 +767,14 @@ public class MrFresh extends OpMode {
             nowTurning = false;
             landerState = 1;
         }
-        if(landerState == 1) {
-            if(ExcessStuff.closeEnough(shoulderMotor.getCurrentPosition(),1754,25) && ExcessStuff.closeEnough(elbowMotor.getCurrentPosition(),1732,25)) {
+        if (landerState == 1) {
+            if (ExcessStuff.closeEnough(shoulderMotor.getCurrentPosition(), 1754, 25) && ExcessStuff.closeEnough(elbowMotor.getCurrentPosition(), 1732, 25)) {
                 landerState = 2;
                 rotationMotor.setPower(.7);
             }
         }
-        if(landerState == 2) {
-            if(ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(),1400,  50)) {
+        if (landerState == 2) {
+            if (ExcessStuff.closeEnough(rotationMotor.getCurrentPosition(), 1400, 50)) {
                 leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 middleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -747,16 +784,16 @@ public class MrFresh extends OpMode {
                     rightMotor.setTargetPosition(sideAdjusted);
                 }
                 else {*/
-                    leftMotor.setTargetPosition(3200);
-                    rightMotor.setTargetPosition(3200);
+                leftMotor.setTargetPosition(3200);
+                rightMotor.setTargetPosition(3200);
                 /*}
                 if(middleAdjusted != 422422) {
                     middleMotor.setTargetPosition(middleAdjusted);
                     middleMotor2.setTargetPosition(middleAdjusted);
                 }
                 else {*/
-                    middleMotor.setTargetPosition(1550);
-                    middleMotor2.setTargetPosition(1550);
+                middleMotor.setTargetPosition(1550);
+                middleMotor2.setTargetPosition(1550);
                 //}
                 leftMotor.setPower(.6);
                 rightMotor.setPower(.6);
@@ -768,20 +805,20 @@ public class MrFresh extends OpMode {
                 reachedGoal = false;
             }
         }
-        if(landerState == 3) {
-            if(firstTimeGeneral) {
-                if(leftMotor.getMode().equals(DcMotor.RunMode.RUN_TO_POSITION)) {
+        if (landerState == 3) {
+            if (firstTimeGeneral) {
+                if (leftMotor.getMode().equals(DcMotor.RunMode.RUN_TO_POSITION)) {
                     powerMultiplier = ((startingAngle - Double.parseDouble(angleDouble)) / 90);
                     leftMotor.setPower((.6 - powerMultiplier));
                     rightMotor.setPower((.6 + powerMultiplier));
                 }
             }
-            if((ExcessStuff.closeEnough(leftMotor.getCurrentPosition(), 3200,25) || ExcessStuff.closeEnough(leftMotor.getCurrentPosition(),sideAdjusted,25)) && (ExcessStuff.closeEnough(middleMotor.getCurrentPosition(), 1550,25) || ExcessStuff.closeEnough(middleMotor.getCurrentPosition(),middleAdjusted,25))) {
+            if ((ExcessStuff.closeEnough(leftMotor.getCurrentPosition(), 3200, 25) || ExcessStuff.closeEnough(leftMotor.getCurrentPosition(), sideAdjusted, 25)) && (ExcessStuff.closeEnough(middleMotor.getCurrentPosition(), 1550, 25) || ExcessStuff.closeEnough(middleMotor.getCurrentPosition(), middleAdjusted, 25))) {
                 leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                if(firstTimeGeneral) {
+                if (firstTimeGeneral) {
                     leftMotor.setPower(0);
                     rightMotor.setPower(0);
                     middleMotor2.setPower(0);
@@ -790,12 +827,12 @@ public class MrFresh extends OpMode {
                 }
                 reachedGoal = true;
             }
-            if((!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_left && !gamepad1.dpad_right) && reachedGoal) {
+            if ((!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_left && !gamepad1.dpad_right) && reachedGoal) {
                 powerMultiplier = 2 * ((startingAngle - Double.parseDouble(angleDouble)) / 90);
                 leftMotor.setPower(-powerMultiplier);
                 rightMotor.setPower(powerMultiplier);
             }
-            if(gamepad2.right_bumper) {
+            if (gamepad2.right_bumper) {
                 landerState = 4;
                 bumperPressedLander = true;
             }
@@ -806,13 +843,12 @@ public class MrFresh extends OpMode {
             }
             if (gamepad2.right_trigger == 1) {
                 rightIntake.setPosition(.05);
-            }
-            else {
+            } else {
                 rightIntake.setPosition(.5);
             }
         }
-        if(landerState == 4) {
-            if(dpadWasPressed) {
+        if (landerState == 4) {
+            if (dpadWasPressed) {
                 sideAdjusted = leftMotor.getCurrentPosition();
                 middleAdjusted = middleMotor.getCurrentPosition();
             }
@@ -826,9 +862,9 @@ public class MrFresh extends OpMode {
             landerState = 5;
             firstTimeGeneral = true;
         }
-        if(landerState == 5) { //empties the right ones
-            if(!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_right &&  !gamepad1.dpad_left) {
-                powerMultiplier = ((startingAngle - Double.parseDouble(angleDouble))/90);
+        if (landerState == 5) { //empties the right ones
+            if (!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_right && !gamepad1.dpad_left) {
+                powerMultiplier = ((startingAngle - Double.parseDouble(angleDouble)) / 90);
                 leftMotor.setPower((-powerMultiplier));
                 rightMotor.setPower((powerMultiplier));
             }
@@ -846,7 +882,7 @@ public class MrFresh extends OpMode {
                 landerState = 6;
             }
         }
-        if(landerState == 6) {
+        if (landerState == 6) {
             dpadWasPressed = false;
             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -866,19 +902,19 @@ public class MrFresh extends OpMode {
             middleMotor2.setPower(.3);
             landerState = 7;
         }
-        if(landerState == 7) {
-            powerMultiplier = ((startingAngle - Double.parseDouble(angleDouble))/90);
-            leftMotor.setPower((.5+powerMultiplier));
-            rightMotor.setPower((.5-powerMultiplier));
-            if(ExcessStuff.closeEnough(leftMotor.getCurrentPosition(),1000,100) || ExcessStuff.closeEnough(rightMotor.getCurrentPosition(),1000,100)) {
+        if (landerState == 7) {
+            powerMultiplier = ((startingAngle - Double.parseDouble(angleDouble)) / 90);
+            leftMotor.setPower((.5 + powerMultiplier));
+            rightMotor.setPower((.5 - powerMultiplier));
+            if (ExcessStuff.closeEnough(leftMotor.getCurrentPosition(), 1000, 100) || ExcessStuff.closeEnough(rightMotor.getCurrentPosition(), 1000, 100)) {
                 rotationMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rotationMotor.setTargetPosition(priorRotationPos);
                 rotationMotor.setPower(.6);
                 landerState = 8;
             }
         }
-        if(landerState == 8) {
-            if(rotationMotor.getCurrentPosition() > 2700) {
+        if (landerState == 8) {
+            if (rotationMotor.getCurrentPosition() > 2700) {
                 rotationMotor.setPower(.25);
                 leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -892,16 +928,18 @@ public class MrFresh extends OpMode {
                 shoulderMotor.setTargetPosition(priorShoulderPos);
                 elbowMotor.setPower(.6);
                 shoulderMotor.setPower(.6);
-                rotationMotor.setPower(ExcessStuff.scaleSpeed(.4,.1,priorRotationPos,rotationMotor.getCurrentPosition()));
+                rotationMotor.setPower(ExcessStuff.scaleSpeed(.4, .1, priorRotationPos, rotationMotor.getCurrentPosition()));
             }
         }
 
     }
+
     public void setZeros() {
-        if(armMoved == false) {
+        if (armMoved == false) {
             rotationMotor.setPower(0);
         }
     }
+
     public void checkAutoArmButtons() {
         /*if(gamepad1.a) { //lander
             armMoved = true;
@@ -945,6 +983,7 @@ public class MrFresh extends OpMode {
             firstTimeY2 = true;
         }*/
     }
+
     public void checkDeadReckonButton() {
         if (gamepad2.b) {
             firstTimeNotSeeingB = true;
@@ -966,8 +1005,9 @@ public class MrFresh extends OpMode {
             }
         }
     }
+
     public void checkEncoderModes() {
-        if((!leftMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER) || !rightMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER) || !middleMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER)) && !buttonAToggle && !gamepad1.left_bumper && !gamepad1.right_bumper && !gamepad2.b) {
+        if ((!leftMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER) || !rightMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER) || !middleMotor.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER)) && !buttonAToggle && !gamepad1.left_bumper && !gamepad1.right_bumper && !gamepad2.b) {
             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
