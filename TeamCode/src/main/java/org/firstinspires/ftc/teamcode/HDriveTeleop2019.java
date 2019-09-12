@@ -88,6 +88,7 @@ public class HDriveTeleop2019 extends OpMode {
     float rightX;
     double leftX;
     double leftY;
+    double holdAnge = 0;
     String angleDouble = "hi";
     boolean newGamepad2Pressed = true;
 
@@ -109,6 +110,8 @@ public class HDriveTeleop2019 extends OpMode {
     Orientation angles;
     BNO055IMU imu;
     PIDFCoefficients pidStuff;
+
+    BezierCurve curveAlgorithm;
 
     public void init() {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -135,6 +138,7 @@ public class HDriveTeleop2019 extends OpMode {
         hangArmLock = hardwareMap.servo.get("Hang Arm Lock");
         calculator = new HDriveFCCalc();
         armCalculator = new ArmCalculator(bicep, forearm);
+        curveAlgorithm = new BezierCurve();
 
         elbowMotor.setDirection(DcMotor.Direction.REVERSE);
         rotationMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -148,6 +152,9 @@ public class HDriveTeleop2019 extends OpMode {
         middleMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = formatAngle(angles.angleUnit, angles.firstAngle);
+        holdAnge = Double.parseDouble(angleDouble);
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

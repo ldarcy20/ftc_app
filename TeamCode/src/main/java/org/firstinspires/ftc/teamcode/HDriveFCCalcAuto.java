@@ -17,8 +17,8 @@ public class HDriveFCCalcAuto {
             double driveRight = tempVal;
 
             int encoderTicks = (int) ((1150 * inches)/ (2 * Math.PI * 2));
-            side = encoderTicks* (int) tempVal;
-            middle = encoderTicks* (int) driveMiddle;
+            side = encoderTicks * (int) tempVal;
+            middle = encoderTicks * (int) driveMiddle;
 
 
             if (driveLeft > 1) {

@@ -52,6 +52,7 @@ public class MrFresh extends OpMode {
     double craterState = 0;
     double powerMultiplier = 0;
     double rotationPos = 0;
+    double sideChangePower = 0;
     double leftTime = System.currentTimeMillis();
     double rightTime = System.currentTimeMillis();
 
@@ -93,6 +94,7 @@ public class MrFresh extends OpMode {
     float rightX;
     double leftX;
     double leftY;
+    double holdAngle = 0;
     double timeDifferenceBetweenLoops = System.currentTimeMillis();
     String angleDouble = "hi";
 
@@ -155,7 +157,9 @@ public class MrFresh extends OpMode {
         shoulderMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         elbowMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);*/
-
+        angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
+        holdAngle = Double.parseDouble(angleDouble);
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -189,29 +193,8 @@ public class MrFresh extends OpMode {
         angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
         here++;
         armCalculator.calculateSpeed(gamepad2.left_stick_x, gamepad2.right_stick_y, shoulderMotor, elbowMotor, ExcessStuff.shoulderAngle((double) shoulderMotor.getCurrentPosition()), ExcessStuff.elbowAngle((double) elbowMotor.getCurrentPosition()), telemetry);
-        telemetry.addData("Angle", angleDouble);
-        telemetry.addData("Left Pos",leftMotor.getCurrentPosition());
-        telemetry.addData("Right Pos", rightMotor.getCurrentPosition());
-        telemetry.addData("Middle Motor", middleMotor.getCurrentPosition());
-        telemetry.addData("Left Thing", leftMotor.getMode());
-        telemetry.addData("Middle Thing", middleMotor.getMode());
-        telemetry.addData("Middle Power", middleMotor.getPower());
-        telemetry.addData("Hang Motor", hangArm.getCurrentPosition());
-        telemetry.addData("Elbow Motor", elbowMotor.getCurrentPosition());
-        telemetry.addData("Rotation Motor", rotationMotor.getCurrentPosition());
-        telemetry.addData("Shoulder Motor", shoulderMotor.getCurrentPosition());
-        telemetry.addData("Shoulder Angle", ExcessStuff.shoulderAngle((double)shoulderMotor.getCurrentPosition()));
-        telemetry.addData("Elbow Angle", ExcessStuff.elbowAngle((double)elbowMotor.getCurrentPosition()));
-        telemetry.addData("Arm Moved", armMoved);
-        telemetry.addData("Hang State", hangerState);
-        telemetry.addData("Side Adjusted", sideAdjusted);
-        telemetry.addData("Mid Adjusted", middleAdjusted);
-        telemetry.addData("Lander State", landerState);
-        telemetry.addData("Power Multiplier", powerMultiplier);
-        telemetry.addData("target y", armCalculator.getTargetY());
-        telemetry.addData("Rotation Pos", rotationPos);
-        telemetry.addData("Rotation Mode", rotationMotor.getMode());
-        telemetry.addData("Button A", buttonAToggle);
+        telemetry.addData("Hold Angle", ExcessStuff.convertAngle(holdAngle));
+        telemetry.addData("Current Angle", ExcessStuff.convertAngle(Double.parseDouble(angleDouble)));
         //telemetry.addData("left intake", leftIntakeWasUsed);
         //telemetry.addData("Thing",((System.currentTimeMillis() - leftTime)));
         telemetry.update();
@@ -533,6 +516,9 @@ public class MrFresh extends OpMode {
             }
             if (buttonAToggle != true && yPressed == false) {
                 rightX = gamepad1.right_stick_x;
+                if(rightX != 0) {
+                    holdAngle = Double.parseDouble(angleDouble);
+                }
             }
             if (gamepad1.b == true) {
                 offset = Double.parseDouble(angleDouble) + 180;
@@ -568,6 +554,7 @@ public class MrFresh extends OpMode {
             if (calculator.getLeftDrive() != 0 || calculator.getRightDrive() != 0 || calculator.getMiddleDrive() != 0) {
                 sideMoved = true;
             }
+            maintainAngle();
             leftMotor.setPower(speed * calculator.getLeftDrive());
             rightMotor.setPower(speed * calculator.getRightDrive());
             middleMotor.setPower(speed * calculator.getMiddleDrive());
@@ -656,7 +643,13 @@ public class MrFresh extends OpMode {
         }
         sideMoved = true;
     }
-
+    public void maintainAngle() {
+        angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        angleDouble = ExcessStuff.formatAngle(angles.angleUnit, angles.firstAngle);
+        if (holdAngle < Double.parseDouble(angleDouble)) {
+            sideChangePower = Math.abs(Double.parseDouble(angleDouble)) - Math.abs(holdAngle);
+        }
+    }
     public void getOnLander() {
         if (firstTimeLander) {
             hangerState = 0;

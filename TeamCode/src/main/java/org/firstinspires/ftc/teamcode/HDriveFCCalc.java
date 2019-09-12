@@ -30,6 +30,10 @@ public class HDriveFCCalc {
             driveLeft = driveLeft * (1 / driveRight);
             driveMiddle = driveMiddle * (1 / driveRight);
             driveRight = 1;
+        } else if(driveMiddle > 1) {
+            driveLeft = driveLeft * (1 / driveMiddle);
+            driveRight = driveRight * (1 / driveMiddle);
+            driveMiddle = 1;
         }
         if(joystickX == 0 && joystickY == 0 && Math.abs(turnStickX) > .8) {
             driveLeft = tempVal + turnStickX;
