@@ -22,6 +22,8 @@ public class ChangePIDiFulDarby extends OpMode {
     boolean right_trigger_isPressed;
     boolean right_bumper_isPressed;
     boolean left_bumper_isPressed;
+    double lastVal;
+    boolean darby = false;
 
     @Override
     public void init() {
@@ -32,6 +34,11 @@ public class ChangePIDiFulDarby extends OpMode {
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
         middleMotor.setDirection(DcMotor.Direction.REVERSE);
         middleMotor2.setDirection(DcMotor.Direction.REVERSE);
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        middleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff.p = 10;
         pidStuff.i = 2;
@@ -63,16 +70,16 @@ public class ChangePIDiFulDarby extends OpMode {
             right_trigger_isPressed = false;
         }
         if (mode == 0){
-            changeValue(p, 1);
+            p = changeValue(p, 1);
         }
         else if (mode == 1){
-            changeValue(i, .25);
+            i = changeValue(i, .25);
         }
         else if (mode == 2){
-            changeValue(d, .25);
+            d = changeValue(d, .25);
         }
         else if (mode == 3){
-            changeValue(f, 1);
+            f = changeValue(f, 1);
         }
         pidStuff.p = p;
         pidStuff.i = i;
@@ -82,14 +89,40 @@ public class ChangePIDiFulDarby extends OpMode {
         rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
         middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
         middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
+        telemetry.addData("mode:", mode);
+        telemetry.addData("P what I want to set", p);
         telemetry.addData( "P:", pidStuff.p);
         telemetry.addData( "I:", pidStuff.i);
         telemetry.addData( "D:", pidStuff.d);
         telemetry.addData( "F:", pidStuff.f);
+        telemetry.addData("Left Pid F", leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).f);
+        telemetry.addData("Did Change Val", darby);
+        middleMotor.setPower(gamepad1.left_stick_x);
+        middleMotor2.setPower(gamepad1.left_stick_x);
 
+        if (gamepad1.right_stick_x != 0){
+            rightMotor.setPower(gamepad1.right_stick_x);
+            leftMotor.setPower(-gamepad1.right_stick_x);
+        } else {
+            leftMotor.setPower(gamepad1.left_stick_y);
+            rightMotor.setPower(gamepad1.left_stick_y);
+        }
+        if (Math.abs(leftMotor.getPower() + lastVal)< Math.abs (leftMotor.getPower())){
+            telemetry.addData("braking", 1);
+            darby = true;
 
+        }
+        if (darby && Math.abs(gamepad1.left_stick_x)< .05){
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+            darby = false;
+        }
+
+        lastVal = leftMotor.getPower();
+
+        telemetry.update();
     }
-    public void changeValue(double daniel, double incr){
+    public double changeValue(double daniel, double incr){
         if (gamepad1.left_bumper && !left_bumper_isPressed){
             daniel -= incr;
             left_bumper_isPressed = true;
@@ -104,5 +137,6 @@ public class ChangePIDiFulDarby extends OpMode {
         if (!gamepad1.left_bumper){
             left_bumper_isPressed = false;
         }
+        return daniel;
     }
 }

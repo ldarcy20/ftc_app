@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode;
 /**
  * Created by Luke on 9/7/2016.
  */
-public class HDriveFCCalc {
+
+public class HDriveFCCalc  {
     double leftMove;
     double rightMove;
     double middleMove;

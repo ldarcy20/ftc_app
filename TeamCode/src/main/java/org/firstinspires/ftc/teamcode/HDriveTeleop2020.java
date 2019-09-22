@@ -107,7 +107,7 @@ public class HDriveTeleop2020 extends OpMode {
         middleMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff = leftMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
         pidStuff.p = 10;
-        pidStuff.i = 4;
+        pidStuff.i = 100;
         pidStuff.d = 0;
         pidStuff.f = 14;
         pidStuff.algorithm = MotorControlAlgorithm.PIDF;
@@ -116,8 +116,8 @@ public class HDriveTeleop2020 extends OpMode {
         middleMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
         middleMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidStuff);
 
-        timeDifferenceBetweenLoops = System.currentTimeMillis();
-    }
+    timeDifferenceBetweenLoops = System.currentTimeMillis();
+}
 
     public void loop() {
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
